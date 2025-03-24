@@ -2,7 +2,10 @@ package fit24.duy.musicplayer.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Data
 @Entity
@@ -23,6 +26,25 @@ public class User {
 
     private String profileImage;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private List<Playlist> playlists;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Playlist> playlists = new ArrayList<>();
+
+    @ManyToMany
+    @JoinTable(
+        name = "user_liked_contents",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "content_id")
+    )
+    private Set<Content> likedContents = new HashSet<>();
+
+    @ManyToMany
+    @JoinTable(
+        name = "user_followed_artists",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "artist_id")
+    )
+    private Set<Artist> followedArtists = new HashSet<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PlayHistory> playHistory = new ArrayList<>();
 } 

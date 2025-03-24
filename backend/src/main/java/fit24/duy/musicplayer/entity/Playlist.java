@@ -2,6 +2,8 @@ package fit24.duy.musicplayer.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -17,15 +19,34 @@ public class Playlist {
 
     private String description;
 
+    private String coverImage;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @ManyToMany
     @JoinTable(
-        name = "playlist_songs",
+        name = "playlist_contents",
         joinColumns = @JoinColumn(name = "playlist_id"),
-        inverseJoinColumns = @JoinColumn(name = "song_id")
+        inverseJoinColumns = @JoinColumn(name = "content_id")
     )
-    private List<Song> songs;
+    private List<Content> contents = new ArrayList<>();
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 } 
