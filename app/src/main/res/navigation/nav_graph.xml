@@ -24,4 +24,9 @@
         android:name="fit24.duy.musicplayer.fragments.ProfileFragment"
         android:label="Profile" />
 
+    <fragment
+        android:id="@+id/navigation_search_result"
+        android:name="fit24.duy.musicplayer.fragments.SearchResultFragment"
+        android:label="Search Result" />
+
 </navigation> 

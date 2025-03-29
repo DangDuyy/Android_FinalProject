@@ -1,7 +1,9 @@
 package fit24.duy.musicplayer.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -27,6 +29,7 @@ public class User {
     private String profileImage;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonBackReference
     private List<Playlist> playlists = new ArrayList<>();
 
     @ManyToMany
@@ -46,5 +49,6 @@ public class User {
     private Set<Artist> followedArtists = new HashSet<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonBackReference
     private List<PlayHistory> playHistory = new ArrayList<>();
 } 

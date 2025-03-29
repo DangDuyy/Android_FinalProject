@@ -1,7 +1,9 @@
 package fit24.duy.musicplayer.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
+
 import java.time.LocalDateTime;
 
 @Data
@@ -14,10 +16,12 @@ public class PlayHistory {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonBackReference
     private User user;
 
     @ManyToOne
     @JoinColumn(name = "content_id", nullable = false)
+    @JsonBackReference
     private Content content;
 
     @Column(name = "played_at", nullable = false)

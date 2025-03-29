@@ -1,7 +1,9 @@
 package fit24.duy.musicplayer.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,5 +23,6 @@ public class MediaType {
     private String icon;
 
     @OneToMany(mappedBy = "mediaType", cascade = CascadeType.ALL)
+    @JsonBackReference
     private List<Content> contents = new ArrayList<>();
 } 
