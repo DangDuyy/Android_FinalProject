@@ -68,7 +68,7 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.MusicViewHol
         public void bind(Song song) {
             albumArt.setImageResource(song.getAlbumArt());
             title.setText(song.getTitle());
-            artist.setText(song.getArtist());
+            artist.setText(song.getArtist().getName());
         }
     }
 } 

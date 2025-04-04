@@ -2,12 +2,13 @@ package fit24.duy.musicplayer.models;
 
 public class Song {
     private String title;
-    private String artist;
+    private Artist artist;
     private int albumArt;
+    private String coverImage;
     private String duration;
     private String url;
 
-    public Song(String title, String artist, int albumArt) {
+    public Song(String title, Artist artist, int albumArt) {
         this.title = title;
         this.artist = artist;
         this.albumArt = albumArt;
@@ -21,11 +22,11 @@ public class Song {
         this.title = title;
     }
 
-    public String getArtist() {
+    public Artist getArtist() {
         return artist;
     }
 
-    public void setArtist(String artist) {
+    public void setArtist(Artist artist) {
         this.artist = artist;
     }
 
@@ -52,4 +53,12 @@ public class Song {
     public void setUrl(String url) {
         this.url = url;
     }
-} 
+
+    public String getCoverImage() {
+        return coverImage;
+    }
+
+    public void setCoverImage(String coverImage) {
+        this.coverImage = coverImage;
+    }
+}

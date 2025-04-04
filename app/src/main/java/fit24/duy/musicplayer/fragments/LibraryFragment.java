@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import fit24.duy.musicplayer.R;
 import fit24.duy.musicplayer.adapters.MusicAdapter;
+import fit24.duy.musicplayer.models.Artist;
 import fit24.duy.musicplayer.models.Song;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,17 +45,17 @@ public class LibraryFragment extends Fragment {
 
     private List<Song> getDummyPlaylists() {
         List<Song> playlists = new ArrayList<>();
-        playlists.add(new Song("Favorite Songs", "15 songs", R.drawable.album_placeholder));
-        playlists.add(new Song("Workout Mix", "20 songs", R.drawable.album_placeholder));
-        playlists.add(new Song("Chill Vibes", "25 songs", R.drawable.album_placeholder));
+        playlists.add(new Song("Favorite Songs", new Artist("15 songs", "", ""), R.drawable.album_placeholder));
+        playlists.add(new Song("Workout Mix", new Artist("20 songs", "", ""), R.drawable.album_placeholder));
+        playlists.add(new Song("Chill Vibes", new Artist("25 songs", "", ""), R.drawable.album_placeholder));
         return playlists;
     }
 
     private List<Song> getDummySavedSongs() {
         List<Song> songs = new ArrayList<>();
-        songs.add(new Song("Saved Song 1", "Artist 1", R.drawable.album_placeholder));
-        songs.add(new Song("Saved Song 2", "Artist 2", R.drawable.album_placeholder));
-        songs.add(new Song("Saved Song 3", "Artist 3", R.drawable.album_placeholder));
+        songs.add(new Song("Saved Song 1", new Artist("Artist 1", "", ""), R.drawable.album_placeholder));
+        songs.add(new Song("Saved Song 2", new Artist("Artist 2", "", ""), R.drawable.album_placeholder));
+        songs.add(new Song("Saved Song 3", new Artist("Artist 3", "", ""), R.drawable.album_placeholder));
         return songs;
     }
 } 

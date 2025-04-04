@@ -87,10 +87,12 @@ public class SearchResultAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
 
         public void bind(Song song) {
             tvTitle.setText(song.getTitle());
-            tvArtist.setText(song.getArtist());
+            tvArtist.setText(song.getArtist().getName());
             Glide.with(itemView.getContext())
-                    .load(song.getAlbumArt()) // Nếu URL, sửa thành getAlbumArtUrl()
+                    .load("http://10.0.2.2:8080/uploads/" + song.getCoverImage() + "?t=" + System.currentTimeMillis())
                     .placeholder(R.drawable.album_placeholder)
+                    .error(R.drawable.album_placeholder)
+                    .centerCrop()
                     .into(imgCover);
         }
     }
@@ -108,8 +110,9 @@ public class SearchResultAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
         public void bind(Artist artist) {
             tvName.setText(artist.getName());
             Glide.with(itemView.getContext())
-                    .load(artist.getProfileImage())
+                    .load("http://10.0.2.2:8080/uploads/" + artist.getProfileImage() + "?t=" + System.currentTimeMillis())
                     .placeholder(R.drawable.default_avatar)
+                    .error(R.drawable.default_avatar)
                     .circleCrop()
                     .into(imgArtist);
         }
@@ -128,8 +131,10 @@ public class SearchResultAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
         public void bind(Album album) {
             tvTitle.setText(album.getTitle());
             Glide.with(itemView.getContext())
-                    .load(album.getCoverImage())
+                    .load("http://10.0.2.2:8080/uploads/" + album.getCoverImage() + "?t=" + System.currentTimeMillis())
                     .placeholder(R.drawable.album_placeholder)
+                    .error(R.drawable.album_placeholder)
+                    .centerCrop()
                     .into(imgAlbum);
         }
     }
