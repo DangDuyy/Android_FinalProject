@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -24,7 +25,16 @@ import java.util.List;
 
 import fit24.duy.musicplayer.R;
 import fit24.duy.musicplayer.adapters.MusicAdapter;
+import fit24.duy.musicplayer.adapters.SearchResultAdapter;
+import fit24.duy.musicplayer.api.ApiService;
+import fit24.duy.musicplayer.api.RetrofitClient;
+import fit24.duy.musicplayer.models.Album;
+import fit24.duy.musicplayer.models.Artist;
+import fit24.duy.musicplayer.models.SearchResponse;
 import fit24.duy.musicplayer.models.Song;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class SearchResultFragment extends Fragment {
     private EditText edtSearch;
@@ -81,15 +91,35 @@ public class SearchResultFragment extends Fragment {
     }
 
     private void performSearch(String query) {
-        List<Song> searchResults = new ArrayList<>();
-        if (!query.isEmpty()) {
-            searchResults.add(new Song("Search Result 1: " + query, "Artist 1", R.drawable.album_placeholder));
-            searchResults.add(new Song("Search Result 2: " + query, "Artist 2", R.drawable.album_placeholder));
-            searchResults.add(new Song("Search Result 3: " + query, "Artist 3", R.drawable.album_placeholder));
+        if (query.isEmpty()) {
+            // Nếu query trống, ẩn danh sách kết quả
+            searchResultsRecyclerView.setAdapter(null);
+            return; // Dừng tìm kiếm khi không có chữ
         }
-        searchAdapter = new MusicAdapter(searchResults);
-        searchResultsRecyclerView.setAdapter(searchAdapter);
+
+        ApiService apiService = RetrofitClient.getRetrofit().create(ApiService.class);
+        apiService.search(query).enqueue(new Callback<SearchResponse>() {
+            @Override
+            public void onResponse(Call<SearchResponse> call, Response<SearchResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    List<Object> results = new ArrayList<>();
+                    results.addAll(response.body().getSongs());
+                    results.addAll(response.body().getArtists());
+                    results.addAll(response.body().getAlbums());
+
+                    SearchResultAdapter adapter = new SearchResultAdapter(getContext(), results);
+                    searchResultsRecyclerView.setAdapter(adapter);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<SearchResponse> call, Throwable t) {
+                Toast.makeText(getContext(), "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
+
+
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
