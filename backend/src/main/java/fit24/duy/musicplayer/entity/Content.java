@@ -37,7 +37,7 @@ public class Content {
 
     @ManyToOne
     @JoinColumn(name = "artist_id", nullable = false)
-    private Artist creator;
+    private Artist artist;
 
     @ManyToOne
     @JoinColumn(name = "album_id")
@@ -84,4 +84,4 @@ public class Content {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-} 
+}

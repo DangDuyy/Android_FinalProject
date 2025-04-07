@@ -23,7 +23,7 @@ public class Artist {
     private String profileImage;
 
     @OneToMany(mappedBy = "artist", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Song> songs = new ArrayList<>();
+    private List<Content> contents = new ArrayList<>();
 
     @OneToMany(mappedBy = "artist", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Album> albums = new ArrayList<>();

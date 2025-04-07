@@ -3,98 +3,95 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/black"
     android:orientation="vertical"
+    android:background="@color/black"
     android:padding="24dp">
 
-    <ImageView
-        android:layout_width="80dp"
-        android:layout_height="80dp"
-        android:layout_gravity="center"
-        android:layout_marginTop="48dp"
-        android:src="@drawable/spotify_logo" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_marginTop="16dp"
-        android:text="Millions of Songs."
-        android:textColor="@android:color/white"
-        android:textSize="32sp"
-        android:textStyle="bold" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:text="Free on Spotify."
-        android:textColor="@android:color/white"
-        android:textSize="32sp"
-        android:textStyle="bold" />
-
-    <Space
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
-
-    <Button
-        android:id="@+id/sign_up_button"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="32dp">
+
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/ic_back"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:tint="@color/white"/>
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Đăng nhập"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:gravity="center"/>
+
+        <View
+            android:layout_width="48dp"
+            android:layout_height="48dp"/>
+    </LinearLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Email hoặc tên người dùng"
+        app:hintTextColor="@color/white"
+        android:textColorHint="@color/light_gray"
+        app:boxStrokeColor="@color/white"
         android:layout_marginBottom="16dp"
-        android:background="@drawable/rounded_button_green"
-        android:text="Sign up free"
-        android:textAllCaps="false"
-        android:textColor="@android:color/black"
-        android:textSize="16sp" />
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
-    <Button
-        android:id="@+id/google_login_button"
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/edtEmail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textEmailAddress"
+            android:textColor="@color/white"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:background="@drawable/rounded_button_outline"
-        android:drawableStart="@drawable/ic_google"
-        android:paddingStart="24dp"
-        android:paddingEnd="24dp"
-        android:text="Continue with Google"
-        android:textAllCaps="false"
-        android:textColor="@android:color/white" />
-
-    <Button
-        android:id="@+id/facebook_login_button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:background="@drawable/rounded_button_outline"
-        android:drawableStart="@drawable/ic_facebook"
-        android:paddingStart="24dp"
-        android:paddingEnd="24dp"
-        android:text="Continue with Facebook"
-        android:textAllCaps="false"
-        android:textColor="@android:color/white" />
-
-    <Button
-        android:id="@+id/apple_login_button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:hint="Mật khẩu"
+        app:hintTextColor="@color/white"
+        android:textColorHint="@color/light_gray"
+        app:boxStrokeColor="@color/white"
+        app:passwordToggleEnabled="true"
+        app:passwordToggleTint="@color/white"
         android:layout_marginBottom="24dp"
-        android:background="@drawable/rounded_button_outline"
-        android:drawableStart="@drawable/ic_apple"
-        android:paddingStart="24dp"
-        android:paddingEnd="24dp"
-        android:text="Continue with Apple"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/edtPassword"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textPassword"
+            android:textColor="@color/white"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnLogin"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Đăng nhập"
         android:textAllCaps="false"
-        android:textColor="@android:color/white" />
+        android:padding="16dp"
+        android:backgroundTint="@color/spotify_green"
+        android:layout_marginBottom="16dp"/>
 
     <TextView
-        android:id="@+id/login_text"
+        android:id="@+id/btnForgotPassword"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:text="Đăng nhập không cần mật khẩu"
+        android:textColor="@color/white"
         android:layout_gravity="center"
-        android:text="Log in"
-        android:textColor="@android:color/white"
-        android:textSize="16sp" />
+        android:padding="8dp"/>
 
 </LinearLayout> 
