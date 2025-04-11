@@ -12,71 +12,78 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api") // Giữ nguyên base path là /api
 public class AuthController {
     @Autowired
     private AuthService authService;
     @Autowired
     private UserRepository userRepository;
 
-
+    // Đăng nhập
     @PostMapping("/login")
-    public String Login(@RequestBody UserDTO user) {
+    public String login(@RequestBody UserDTO user) {
         return authService.Login(user.getEmail(), user.getPassword());
     }
 
+    // Lấy danh sách users (nếu cần)
     @GetMapping("/users")
-    public List<User> Users(){
-        List<User> u = authService.users();
-        System.out.println(u.size());
-        return u;
+    public List<User> users() {
+        return authService.users();
     }
 
-    @PostMapping("/sendcode")
-    public String SendOtp(@RequestParam String email) {
-        return authService.SendOtp(email);
+    // Gửi OTP
+    @PostMapping("/send-otp")
+    public ResponseEntity<?> sendOtp(@RequestParam String email) {
+        String result = authService.SendOtp(email);
+        if (result.equals("Error sending OTP")) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(result);
+        }
+        return ResponseEntity.ok(result);
     }
 
+    // Xác thực OTP
+    @PostMapping("/verify-otp")
+    public ResponseEntity<?> verifyOtp(@RequestParam String email, @RequestParam String otp) {
+        if (!authService.VerifyOtp(email, otp)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid OTP");
+        }
+        return ResponseEntity.ok("OTP verified successfully");
+    }
 
+    // Đăng ký user
     @PostMapping("/register")
-    public ResponseEntity<?> Register(@RequestBody UserDTO newUserDTO, @RequestParam String otp) {
-        // Kiểm tra OTP
-        if (!authService.VerifyOtp(newUserDTO.getEmail(), otp)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid OTP"); // Trả về mã lỗi 400
-        }
-
-        // Kiểm tra xem email đã tồn tại chưa
+    public ResponseEntity<?> register(@RequestBody UserDTO newUserDTO) {
+        // Kiểm tra email đã tồn tại chưa
         if (userRepository.findByEmail(newUserDTO.getEmail()).isPresent()) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Email already exists"); // Trả về mã lỗi 409
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Email already exists");
         }
 
-        // Chuyển UserDTO thành User
         User newUser = new User();
+        newUser.setUsername(newUserDTO.getUsername());
         newUser.setEmail(newUserDTO.getEmail());
-        newUser.setPassword(newUserDTO.getPassword()); // Cần mã hóa mật khẩu trước khi lưu vào DB!
+        newUser.setPassword(newUserDTO.getPassword()); // Nên mã hóa password trước khi lưu
 
-        // Lưu người dùng mới vào database
         userRepository.save(newUser);
-        authService.otpCache.remove(newUserDTO.getEmail());
-
         return ResponseEntity.ok("User registered successfully");
     }
 
-
-
-    @PostMapping("/forgotPassword")
-    public String ForgotPassword(@RequestParam String email, @RequestParam String pass, @RequestParam String otp) {
-        if(!userRepository.findByEmail(email).isPresent()) {
-            return "Email not found";
+    // Quên mật khẩu
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestParam String email,
+                                            @RequestParam String newPassword,
+                                            @RequestParam String otp) {
+        if (!userRepository.findByEmail(email).isPresent()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Email not found");
         }
-        // Kiểm tra OTP người dùng nhập vào
+
         if (!authService.VerifyOtp(email, otp)) {
-            return "Invalid OTP";  // Trả về thông báo nếu OTP không chính xác
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid OTP");
         }
-        User u = userRepository.findUserByEmail(email);
-        u.setPassword(pass);
-        userRepository.save(u);
-        authService.otpCache.remove(email);
-        return "User forgot password successfully";
+
+        User user = userRepository.findUserByEmail(email);
+        user.setPassword(newPassword); // Nên mã hóa password mới
+        userRepository.save(user);
+
+        return ResponseEntity.ok("Password updated successfully");
     }
 }

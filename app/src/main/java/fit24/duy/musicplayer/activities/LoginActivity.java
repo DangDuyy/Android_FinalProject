@@ -10,6 +10,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.textfield.TextInputEditText;
 
 import fit24.duy.musicplayer.R;
+import fit24.duy.musicplayer.api.ApiClient;
+import fit24.duy.musicplayer.api.ApiService;
+import fit24.duy.musicplayer.models.UserLoginRequest;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class LoginActivity extends AppCompatActivity {
     private TextInputEditText edtEmail;
@@ -50,10 +56,29 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
 
-        // TODO: Implement actual login with backend
-        // For now, just show a success message and go to main activity
-        Toast.makeText(this, "Đăng nhập thành công", Toast.LENGTH_SHORT).show();
-        startActivity(new Intent(this, MainActivity.class));
-        finishAffinity();
+        UserLoginRequest loginRequest = new UserLoginRequest(email, password);
+
+        ApiService apiService = ApiClient.getClient().create(ApiService.class);
+        Call<Void> call = apiService.login(loginRequest);
+        call.enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                    finishAffinity();
+                } else {
+                    Toast.makeText(LoginActivity.this,
+                            "Đăng nhập thất bại",
+                            Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                Toast.makeText(LoginActivity.this,
+                        "Lỗi kết nối",
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
     }
-} 
+}

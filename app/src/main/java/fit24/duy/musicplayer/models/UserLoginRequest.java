@@ -1,18 +1,15 @@
-package fit24.duy.musicplayer.dto;
+package fit24.duy.musicplayer.models;
 
-public class UserDTO {
-    private String username;
+public class UserLoginRequest {
     private String email;
     private String password;
 
-    public UserDTO() {}
-
-    public UserDTO(String username, String email, String password) {
-        this.username = username;
+    public UserLoginRequest(String email, String password) {
         this.email = email;
         this.password = password;
     }
 
+    // Getter và Setter
     public String getEmail() {
         return email;
     }
@@ -27,13 +24,5 @@ public class UserDTO {
 
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
     }
 }

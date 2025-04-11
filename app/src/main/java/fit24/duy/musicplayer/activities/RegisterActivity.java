@@ -14,6 +14,7 @@ import fit24.duy.musicplayer.R;
 import com.google.android.material.textfield.TextInputEditText;
 import fit24.duy.musicplayer.api.ApiClient;
 import fit24.duy.musicplayer.api.ApiService;
+import fit24.duy.musicplayer.models.UserRegisterRequest;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -93,27 +94,60 @@ public class RegisterActivity extends AppCompatActivity {
             return;
         }
 
-        // Call API to register and send OTP
+        UserRegisterRequest registerRequest = new UserRegisterRequest(
+                username,
+                email,
+                password
+        );
+
         ApiService apiService = ApiClient.getClient().create(ApiService.class);
-        Call<Void> call = apiService.register(username, email, password);
+        Call<Void> call = apiService.register(registerRequest);
         call.enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
                 if (response.isSuccessful()) {
-                    // Registration initiated, navigate to OTP screen
+                    // Gửi OTP sau khi đăng ký thành công
+                    sendOtpAfterRegister(email, username, password);
+                } else {
+                    Toast.makeText(RegisterActivity.this,
+                            "Đăng ký thất bại: " + response.code(),
+                            Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                Toast.makeText(RegisterActivity.this,
+                        "Lỗi kết nối: " + t.getMessage(),
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void sendOtpAfterRegister(String email, String username, String password) {
+        ApiService apiService = ApiClient.getClient().create(ApiService.class);
+        Call<Void> call = apiService.sendOtp(email);
+        call.enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
                     Intent intent = new Intent(RegisterActivity.this, OTPActivity.class);
                     intent.putExtra("email", email);
                     intent.putExtra("username", username);
                     intent.putExtra("password", password);
                     startActivity(intent);
                 } else {
-                    Toast.makeText(RegisterActivity.this, "Email đã được sử dụng", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(RegisterActivity.this,
+                            "Gửi OTP thất bại",
+                            Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<Void> call, Throwable t) {
-                Toast.makeText(RegisterActivity.this, "Lỗi kết nối", Toast.LENGTH_SHORT).show();
+                Toast.makeText(RegisterActivity.this,
+                        "Lỗi kết nối khi gửi OTP",
+                        Toast.LENGTH_SHORT).show();
             }
         });
     }
