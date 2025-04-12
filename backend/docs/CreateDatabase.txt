@@ -1,0 +1,3 @@
+CREATE database music default character set utf8;
+CREATE user 'music'@'%.%.%.%' identified by 'music';
+GRANT ALL PRIVILEGES ON music.* TO 'music'@'%.%.%.%';

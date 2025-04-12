@@ -2,18 +2,24 @@ package fit24.duy.musicplayer.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.Button;
-import android.widget.TextView;
+import android.text.TextUtils;
+import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.android.material.textfield.TextInputEditText;
+
 import fit24.duy.musicplayer.R;
+import fit24.duy.musicplayer.api.ApiClient;
+import fit24.duy.musicplayer.api.ApiService;
+import fit24.duy.musicplayer.models.UserLoginRequest;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class LoginActivity extends AppCompatActivity {
-    private Button signUpButton;
-    private Button googleLoginButton;
-    private Button facebookLoginButton;
-    private Button appleLoginButton;
-    private TextView loginTextView;
+    private TextInputEditText edtEmail;
+    private TextInputEditText edtPassword;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,48 +27,58 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
 
         // Initialize views
-        signUpButton = findViewById(R.id.sign_up_button);
-        googleLoginButton = findViewById(R.id.google_login_button);
-        facebookLoginButton = findViewById(R.id.facebook_login_button);
-        appleLoginButton = findViewById(R.id.apple_login_button);
-        loginTextView = findViewById(R.id.login_text);
+        edtEmail = findViewById(R.id.edtEmail);
+        edtPassword = findViewById(R.id.edtPassword);
 
-        // Set up click listeners
-        signUpButton.setOnClickListener(v -> handleSignUp());
-        googleLoginButton.setOnClickListener(v -> handleGoogleLogin());
-        facebookLoginButton.setOnClickListener(v -> handleFacebookLogin());
-        appleLoginButton.setOnClickListener(v -> handleAppleLogin());
-        loginTextView.setOnClickListener(v -> handleLogin());
-    }
+        // Back button
+        findViewById(R.id.btnBack).setOnClickListener(v -> finish());
 
-    private void handleSignUp() {
-        Intent intent = new Intent(this, RegisterActivity.class);
-        startActivity(intent);
-    }
+        // Login button
+        findViewById(R.id.btnLogin).setOnClickListener(v -> handleLogin());
 
-    private void handleGoogleLogin() {
-        // Implement Google login
-        startMainActivity();
-    }
-
-    private void handleFacebookLogin() {
-        // Implement Facebook login
-        startMainActivity();
-    }
-
-    private void handleAppleLogin() {
-        // Implement Apple login
-        startMainActivity();
+        // Forgot password
+        findViewById(R.id.btnForgotPassword).setOnClickListener(v -> {
+            // TODO: Implement forgot password
+        });
     }
 
     private void handleLogin() {
-        // Handle regular login
-        startMainActivity();
-    }
+        String email = edtEmail.getText().toString().trim();
+        String password = edtPassword.getText().toString().trim();
 
-    private void startMainActivity() {
-        Intent intent = new Intent(this, MainActivity.class);
-        startActivity(intent);
-        finish();
+        if (TextUtils.isEmpty(email)) {
+            edtEmail.setError("Vui lòng nhập email");
+            return;
+        }
+
+        if (TextUtils.isEmpty(password)) {
+            edtPassword.setError("Vui lòng nhập mật khẩu");
+            return;
+        }
+
+        UserLoginRequest loginRequest = new UserLoginRequest(email, password);
+
+        ApiService apiService = ApiClient.getClient().create(ApiService.class);
+        Call<Void> call = apiService.login(loginRequest);
+        call.enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                    finishAffinity();
+                } else {
+                    Toast.makeText(LoginActivity.this,
+                            "Đăng nhập thất bại",
+                            Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                Toast.makeText(LoginActivity.this,
+                        "Lỗi kết nối",
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
     }
-} 
+}

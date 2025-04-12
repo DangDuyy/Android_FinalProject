@@ -31,4 +31,8 @@ public class Album {
     @OneToMany(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonBackReference
     private List<Song> songs = new ArrayList<>();
+
+    @OneToMany(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonBackReference
+    private List<Content> contents = new ArrayList<>();
 }

@@ -11,13 +11,19 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import fit24.duy.musicplayer.activities.MainActivity;
 import fit24.duy.musicplayer.R;
+import com.google.android.material.textfield.TextInputEditText;
+import fit24.duy.musicplayer.api.ApiClient;
+import fit24.duy.musicplayer.api.ApiService;
+import fit24.duy.musicplayer.models.UserRegisterRequest;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class RegisterActivity extends AppCompatActivity {
-    private EditText usernameEditText;
-    private EditText emailEditText;
-    private EditText passwordEditText;
-    private EditText confirmPasswordEditText;
-    private CheckBox termsCheckBox;
+    private TextInputEditText edtUsername;
+    private TextInputEditText edtEmail;
+    private TextInputEditText edtPassword;
+    private TextInputEditText edtConfirmPassword;
     private Button signUpButton;
     private TextView signInText;
 
@@ -27,11 +33,10 @@ public class RegisterActivity extends AppCompatActivity {
         setContentView(R.layout.activity_register);
 
         // Initialize views
-        usernameEditText = findViewById(R.id.username_edit_text);
-        emailEditText = findViewById(R.id.email_edit_text);
-        passwordEditText = findViewById(R.id.password_edit_text);
-        confirmPasswordEditText = findViewById(R.id.confirm_password_edit_text);
-        termsCheckBox = findViewById(R.id.terms_checkbox);
+        edtUsername = findViewById(R.id.edtUsername);
+        edtEmail = findViewById(R.id.edtEmail);
+        edtPassword = findViewById(R.id.edtPassword);
+        edtConfirmPassword = findViewById(R.id.edtConfirmPassword);
         signUpButton = findViewById(R.id.sign_up_button);
         signInText = findViewById(R.id.sign_in_text);
 
@@ -42,49 +47,108 @@ public class RegisterActivity extends AppCompatActivity {
             startActivity(intent);
             finish();
         });
+
+        // Back button
+        findViewById(R.id.btnBack).setOnClickListener(v -> finish());
     }
 
     private void handleSignUp() {
-        String username = usernameEditText.getText().toString().trim();
-        String email = emailEditText.getText().toString().trim();
-        String password = passwordEditText.getText().toString();
-        String confirmPassword = confirmPasswordEditText.getText().toString();
+        String username = edtUsername.getText().toString().trim();
+        String email = edtEmail.getText().toString().trim();
+        String password = edtPassword.getText().toString().trim();
+        String confirmPassword = edtConfirmPassword.getText().toString().trim();
 
-        // Validate inputs
+        // Validate input
         if (TextUtils.isEmpty(username)) {
-            usernameEditText.setError("Username is required");
+            edtUsername.setError("Vui lòng nhập tên người dùng");
             return;
         }
 
         if (TextUtils.isEmpty(email)) {
-            emailEditText.setError("Email is required");
+            edtEmail.setError("Vui lòng nhập email");
+            return;
+        }
+
+        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            edtEmail.setError("Email không hợp lệ");
             return;
         }
 
         if (TextUtils.isEmpty(password)) {
-            passwordEditText.setError("Password is required");
+            edtPassword.setError("Vui lòng nhập mật khẩu");
             return;
         }
 
-        if (TextUtils.isEmpty(confirmPassword)) {
-            confirmPasswordEditText.setError("Please confirm your password");
+        if (password.length() < 6) {
+            edtPassword.setError("Mật khẩu phải có ít nhất 6 ký tự");
             return;
         }
 
         if (!password.equals(confirmPassword)) {
-            confirmPasswordEditText.setError("Passwords do not match");
+            edtConfirmPassword.setError("Mật khẩu không khớp");
             return;
         }
 
-        if (!termsCheckBox.isChecked()) {
-            Toast.makeText(this, "Please accept the Terms & Privacy Policy", Toast.LENGTH_SHORT).show();
+        if (!((CheckBox) findViewById(R.id.cbTerms)).isChecked()) {
+            Toast.makeText(this, "Vui lòng đồng ý với điều khoản và điều kiện", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // If validation passes, proceed with registration
-        // For demo purposes, just navigate to MainActivity
-        Intent intent = new Intent(this, MainActivity.class);
-        startActivity(intent);
-        finish();
+        UserRegisterRequest registerRequest = new UserRegisterRequest(
+                username,
+                email,
+                password
+        );
+
+        ApiService apiService = ApiClient.getClient().create(ApiService.class);
+        Call<Void> call = apiService.register(registerRequest);
+        call.enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    // Gửi OTP sau khi đăng ký thành công
+                    sendOtpAfterRegister(email, username, password);
+                } else {
+                    Toast.makeText(RegisterActivity.this,
+                            "Đăng ký thất bại: " + response.code(),
+                            Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                Toast.makeText(RegisterActivity.this,
+                        "Lỗi kết nối: " + t.getMessage(),
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void sendOtpAfterRegister(String email, String username, String password) {
+        ApiService apiService = ApiClient.getClient().create(ApiService.class);
+        Call<Void> call = apiService.sendOtp(email);
+        call.enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    Intent intent = new Intent(RegisterActivity.this, OTPActivity.class);
+                    intent.putExtra("email", email);
+                    intent.putExtra("username", username);
+                    intent.putExtra("password", password);
+                    startActivity(intent);
+                } else {
+                    Toast.makeText(RegisterActivity.this,
+                            "Gửi OTP thất bại",
+                            Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                Toast.makeText(RegisterActivity.this,
+                        "Lỗi kết nối khi gửi OTP",
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 } 

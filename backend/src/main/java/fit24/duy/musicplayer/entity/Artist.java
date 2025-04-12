@@ -30,6 +30,10 @@ public class Artist {
 
     @OneToMany(mappedBy = "artist", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonBackReference
+    private List<Content> contents = new ArrayList<>();
+
+    @OneToMany(mappedBy = "artist", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonBackReference
     private List<Album> albums = new ArrayList<>();
 
     @ManyToMany(mappedBy = "followedArtists")
