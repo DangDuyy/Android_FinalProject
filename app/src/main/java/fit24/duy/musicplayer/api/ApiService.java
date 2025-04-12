@@ -1,12 +1,18 @@
 package fit24.duy.musicplayer.api;
 
+import java.util.List;
+
+import fit24.duy.musicplayer.models.MediaType;
+import fit24.duy.musicplayer.models.SearchResponse;
 import fit24.duy.musicplayer.models.UserLoginRequest;
 import fit24.duy.musicplayer.models.UserRegisterRequest;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
+import retrofit2.http.GET;
 import retrofit2.http.POST;
+import retrofit2.http.Query;
 
 public interface ApiService {
     // Gửi OTP
