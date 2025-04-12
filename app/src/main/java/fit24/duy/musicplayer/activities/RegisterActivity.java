@@ -101,27 +101,28 @@ public class RegisterActivity extends AppCompatActivity {
         );
 
         ApiService apiService = ApiClient.getClient().create(ApiService.class);
-        Call<Void> call = apiService.register(registerRequest);
-        call.enqueue(new Callback<Void>() {
-            @Override
-            public void onResponse(Call<Void> call, Response<Void> response) {
-                if (response.isSuccessful()) {
-                    // Gửi OTP sau khi đăng ký thành công
-                    sendOtpAfterRegister(email, username, password);
-                } else {
-                    Toast.makeText(RegisterActivity.this,
-                            "Đăng ký thất bại: " + response.code(),
-                            Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<Void> call, Throwable t) {
-                Toast.makeText(RegisterActivity.this,
-                        "Lỗi kết nối: " + t.getMessage(),
-                        Toast.LENGTH_SHORT).show();
-            }
-        });
+        sendOtpAfterRegister(email, username, password);
+//        Call<Void> call = apiService.register(registerRequest);
+//        call.enqueue(new Callback<Void>() {
+//            @Override
+//            public void onResponse(Call<Void> call, Response<Void> response) {
+//                if (response.isSuccessful()) {
+//                    // Gửi OTP sau khi đăng ký thành công
+//                    sendOtpAfterRegister(email, username, password);
+//                } else {
+//                    Toast.makeText(RegisterActivity.this,
+//                            "Đăng ký thất bại: " + response.code(),
+//                            Toast.LENGTH_SHORT).show();
+//                }
+//            }
+//
+//            @Override
+//            public void onFailure(Call<Void> call, Throwable t) {
+//                Toast.makeText(RegisterActivity.this,
+//                        "Lỗi kết nối: " + t.getMessage(),
+//                        Toast.LENGTH_SHORT).show();
+//            }
+//        });
     }
 
     private void sendOtpAfterRegister(String email, String username, String password) {

@@ -71,7 +71,7 @@ public class AuthService {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper messageHelper = new MimeMessageHelper(mimeMessage, false, "UTF-8");
 
-            messageHelper.setFrom(senderEmail, "N-N");  // Thêm tên người gửi
+            messageHelper.setFrom(senderEmail, "07.Nguyễn Duy Đạt");  // Thêm tên người gửi
             messageHelper.setTo(email);
             messageHelper.setSubject("OTP Verification");
             messageHelper.setText("Your OTP code is: " + otp);

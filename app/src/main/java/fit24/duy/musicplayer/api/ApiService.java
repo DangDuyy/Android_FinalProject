@@ -17,26 +17,26 @@ import retrofit2.http.Query;
 public interface ApiService {
     // Gửi OTP
     @FormUrlEncoded
-    @POST("api/send-otp")
+    @POST("send-otp")
     Call<Void> sendOtp(@Field("email") String email);
 
     // Xác thực OTP
     @FormUrlEncoded
-    @POST("api/verify-otp")
+    @POST("verify-otp")
     Call<Void> verifyOtp(@Field("email") String email,
                          @Field("otp") String otp);
 
     // Đăng ký user
-    @POST("api/register")
+    @POST("register")
     Call<Void> register(@Body UserRegisterRequest request);
 
     // Đăng nhập
-    @POST("api/login")
+    @POST("login")
     Call<Void> login(@Body UserLoginRequest request);
 
     // Quên mật khẩu
     @FormUrlEncoded
-    @POST("api/forgot-password")
+    @POST("forgot-password")
     Call<Void> forgotPassword(@Field("email") String email,
                               @Field("newPassword") String newPassword,
                               @Field("otp") String otp);
@@ -44,6 +44,6 @@ public interface ApiService {
     @GET("media-types")
     Call<List<MediaType>> getMediaTypes();
 
-    @GET("/api/search")
+    @GET("search")
     Call<SearchResponse> search(@Query("q") String query);
 }
