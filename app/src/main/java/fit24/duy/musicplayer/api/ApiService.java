@@ -6,6 +6,7 @@ import fit24.duy.musicplayer.models.MediaType;
 import fit24.duy.musicplayer.models.SearchResponse;
 import fit24.duy.musicplayer.models.UserLoginRequest;
 import fit24.duy.musicplayer.models.UserRegisterRequest;
+import fit24.duy.musicplayer.models.UserResponse;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.Field;
@@ -32,7 +33,7 @@ public interface ApiService {
 
     // Đăng nhập
     @POST("login")
-    Call<Void> login(@Body UserLoginRequest request);
+    Call<UserResponse> login(@Body UserLoginRequest request);
 
     // Quên mật khẩu
     @FormUrlEncoded

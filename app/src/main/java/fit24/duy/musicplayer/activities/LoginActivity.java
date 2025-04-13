@@ -1,6 +1,7 @@
 package fit24.duy.musicplayer.activities;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.widget.Toast;
@@ -13,6 +14,7 @@ import fit24.duy.musicplayer.R;
 import fit24.duy.musicplayer.api.ApiClient;
 import fit24.duy.musicplayer.api.ApiService;
 import fit24.duy.musicplayer.models.UserLoginRequest;
+import fit24.duy.musicplayer.models.UserResponse;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -39,6 +41,7 @@ public class LoginActivity extends AppCompatActivity {
         // Forgot password
         findViewById(R.id.btnForgotPassword).setOnClickListener(v -> {
             // TODO: Implement forgot password
+            Toast.makeText(this, "Chức năng quên mật khẩu đang phát triển", Toast.LENGTH_SHORT).show();
         });
     }
 
@@ -59,24 +62,39 @@ public class LoginActivity extends AppCompatActivity {
         UserLoginRequest loginRequest = new UserLoginRequest(email, password);
 
         ApiService apiService = ApiClient.getClient().create(ApiService.class);
-        Call<Void> call = apiService.login(loginRequest);
-        call.enqueue(new Callback<Void>() {
+        Call<UserResponse> call = apiService.login(loginRequest);
+        call.enqueue(new Callback<UserResponse>() {
             @Override
-            public void onResponse(Call<Void> call, Response<Void> response) {
-                if (response.isSuccessful()) {
+            public void onResponse(Call<UserResponse> call, Response<UserResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    UserResponse user = response.body();
+
+                    // Lưu thông tin người dùng vào SharedPreferences
+                    SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+                    SharedPreferences.Editor editor = prefs.edit();
+                    editor.putLong("user_id", user.getId());
+                    editor.putString("username", user.getUsername());
+                    editor.putString("email", user.getEmail());
+                    editor.apply();
+
+                    // Chuyển hướng đến MainActivity
                     startActivity(new Intent(LoginActivity.this, MainActivity.class));
                     finishAffinity();
                 } else {
-                    Toast.makeText(LoginActivity.this,
-                            "Đăng nhập thất bại",
-                            Toast.LENGTH_SHORT).show();
+                    String errorMsg = "Đăng nhập thất bại";
+                    if (response.code() == 401) {
+                        errorMsg = "Email hoặc mật khẩu không đúng";
+                    } else if (response.code() == 400) {
+                        errorMsg = "Dữ liệu không hợp lệ";
+                    }
+                    Toast.makeText(LoginActivity.this, errorMsg, Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
-            public void onFailure(Call<Void> call, Throwable t) {
+            public void onFailure(Call<UserResponse> call, Throwable t) {
                 Toast.makeText(LoginActivity.this,
-                        "Lỗi kết nối",
+                        "Lỗi kết nối: " + t.getMessage(),
                         Toast.LENGTH_SHORT).show();
             }
         });

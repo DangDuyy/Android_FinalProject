@@ -1,12 +1,14 @@
 package fit24.duy.musicplayer.controller;
 
 import fit24.duy.musicplayer.dto.UserDTO;
+import fit24.duy.musicplayer.dto.UserResponse;
 import fit24.duy.musicplayer.entity.User;
 import fit24.duy.musicplayer.repository.UserRepository;
 import fit24.duy.musicplayer.service.impl.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,11 +20,25 @@ public class AuthController {
     private AuthService authService;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private BCryptPasswordEncoder passwordEncoder;
 
     // Đăng nhập
     @PostMapping("/login")
-    public String login(@RequestBody UserDTO user) {
-        return authService.Login(user.getEmail(), user.getPassword());
+    public ResponseEntity<?> login(@RequestBody UserDTO userDTO) {
+        // Tìm user theo email
+        User user = userRepository.findUserByEmail(userDTO.getEmail());
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Email không tồn tại");
+        }
+
+        // Kiểm tra mật khẩu
+        if (!passwordEncoder.matches(userDTO.getPassword(), user.getPassword())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Mật khẩu không đúng");
+        }
+
+        // Trả về thông tin user
+        return ResponseEntity.ok(new UserResponse(user.getId(), user.getUsername(), user.getEmail()));
     }
 
     // Lấy danh sách users (nếu cần)
