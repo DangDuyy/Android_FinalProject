@@ -6,22 +6,21 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.ImageButton;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
-import android.widget.TextView;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-
-import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
 import fit24.duy.musicplayer.R;
-import fit24.duy.musicplayer.adapters.ArtistAdapter;
+import fit24.duy.musicplayer.adapters.AlbumAdapter;
 import fit24.duy.musicplayer.api.ApiClient;
 import fit24.duy.musicplayer.api.ApiService;
 import fit24.duy.musicplayer.models.Song;
@@ -29,82 +28,64 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class ArtistFragment extends Fragment {
+public class AlbumFragment extends Fragment {
     private RecyclerView recyclerView;
-    private ArtistAdapter songAdapter;
+    private AlbumAdapter albumAdapter;
     private ApiService apiService;
-    private TextView artistNameView;
-    private ImageView artistImageView;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_artist, container, false);
-        recyclerView = view.findViewById(R.id.artist_content_list);
+        View view = inflater.inflate(R.layout.fragment_album, container, false); // Dùng lại layout artist
+        recyclerView = view.findViewById(R.id.album_content_list);
 
-        // Nút back
         ImageView btnBack = view.findViewById(R.id.btn_back);
         btnBack.setOnClickListener(v -> {
             NavController navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment);
-            navController.navigateUp(); // Quay lại trang trước
+            navController.navigateUp();
         });
 
         ImageButton playButton = view.findViewById(R.id.play_button);
-
-        // Biến lưu trạng thái đang phát hay không
         final boolean[] isPlaying = {false};
-
         playButton.setOnClickListener(v -> {
             if (isPlaying[0]) {
-                // Đang phát, giờ chuyển thành dừng => đổi về nút Play
                 playButton.setImageResource(R.drawable.ic_play);
                 isPlaying[0] = false;
-
-                // TODO: Thêm code dừng phát nhạc nếu có
             } else {
-                // Đang dừng, giờ phát => đổi về nút Pause
                 playButton.setImageResource(R.drawable.ic_pause);
                 isPlaying[0] = true;
-
-                // TODO: Thêm code phát nhạc nếu có
             }
         });
 
-
-        // Nhận dữ liệu được truyền qua
         Bundle args = getArguments();
         if (args != null) {
-            String artistName = args.getString("artist_name");
-            String artistImage = args.getString("artist_image");
+            String albumTitle = args.getString("album_title");
+            String albumImage = args.getString("album_image");
 
-            TextView nameView = view.findViewById(R.id.artist_name);
-            ImageView imageView = view.findViewById(R.id.artist_image);
+            TextView nameView = view.findViewById(R.id.album_name);
+            ImageView imageView = view.findViewById(R.id.album_image);
 
-            nameView.setText(artistName);
+            nameView.setText(albumTitle);
             Glide.with(requireContext())
-                    .load("http://10.0.2.2:8080/uploads/" + artistImage + "?t=" + System.currentTimeMillis())
-                    .placeholder(R.drawable.default_avatar)
-                    .error(R.drawable.default_avatar)
-                    .circleCrop()
+                    .load("http://10.0.2.2:8080/uploads/" + albumImage + "?t=" + System.currentTimeMillis())
+                    .placeholder(R.drawable.album_placeholder)
                     .into(imageView);
 
-            // Gọi API để lấy danh sách bài hát của nghệ sĩ
-            loadSongsByArtist(artistName);
+            loadSongsByAlbum(albumTitle);
         }
 
         return view;
     }
 
-    private void loadSongsByArtist(String artistName) {
+    private void loadSongsByAlbum(String albumTitle) {
         apiService = ApiClient.getClient().create(ApiService.class);
-        Call<List<Song>> call = apiService.getSongsByArtist(artistName);
+        Call<List<Song>> call = apiService.getSongsByAlbum(albumTitle);
         call.enqueue(new Callback<List<Song>>() {
             @Override
             public void onResponse(Call<List<Song>> call, Response<List<Song>> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    List<Song> songs = response.body();
-                    songAdapter = new ArtistAdapter(requireContext(), songs);
-                    recyclerView.setAdapter(songAdapter);
+                    albumAdapter = new AlbumAdapter(requireContext(), response.body());
+                    recyclerView.setAdapter(albumAdapter);
                 }
             }
 

@@ -53,7 +53,8 @@ public class MainActivity extends AppCompatActivity {
 
         // Listener to manage toolbar visibility
         navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
-            if (destination.getId() == R.id.navigation_search_result || destination.getId() == R.id.navigation_artist) {
+            if (destination.getId() == R.id.navigation_search_result || destination.getId() == R.id.navigation_artist
+                    || destination.getId() == R.id.navigation_album) {
                 getSupportActionBar().hide();  // Ẩn toolbar khi vào trang SearchResult hoặc Artist
             } else {
                 getSupportActionBar().show();  // Hiển thị toolbar khi vào các trang khác

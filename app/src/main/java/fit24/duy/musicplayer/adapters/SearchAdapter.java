@@ -20,7 +20,7 @@ import fit24.duy.musicplayer.models.Album;
 import fit24.duy.musicplayer.models.Artist;
 import fit24.duy.musicplayer.models.Song;
 
-public class SearchResultAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+public class SearchAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private static final int TYPE_SONG = 0;
     private static final int TYPE_ARTIST = 1;
     private static final int TYPE_ALBUM = 2;
@@ -28,7 +28,7 @@ public class SearchResultAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
     private List<Object> results;
     private Context context;
 
-    public SearchResultAdapter(Context context, List<Object> results) {
+    public SearchAdapter(Context context, List<Object> results) {
         this.context = context;
         this.results = results;
     }
@@ -45,7 +45,7 @@ public class SearchResultAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(context);
         if (viewType == TYPE_SONG) {
-            View view = inflater.inflate(R.layout.item_song, parent, false);
+            View view = inflater.inflate(R.layout.item_song_artist, parent, false);
             return new SongViewHolder(view);
         } else if (viewType == TYPE_ARTIST) {
             View view = inflater.inflate(R.layout.item_artist, parent, false);
@@ -83,13 +83,13 @@ public class SearchResultAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
         public SongViewHolder(View itemView) {
             super(itemView);
             tvTitle = itemView.findViewById(R.id.song_title);
-            tvArtist = itemView.findViewById(R.id.artist_name);
-            imgCover = itemView.findViewById(R.id.album_art);
+            tvArtist = itemView.findViewById(R.id.song_artist);
+            imgCover = itemView.findViewById(R.id.song_image);
         }
 
         public void bind(Song song) {
             tvTitle.setText(song.getTitle());
-            tvArtist.setText(song.getArtist().getName());
+            tvArtist.setText("Bài hát •" + song.getArtist().getName());
             Glide.with(itemView.getContext())
                     .load("http://10.0.2.2:8080/uploads/" + song.getCoverImage() + "?t=" + System.currentTimeMillis())
                     .placeholder(R.drawable.album_placeholder)
@@ -146,6 +146,14 @@ public class SearchResultAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
                     .error(R.drawable.album_placeholder)
                     .centerCrop()
                     .into(imgAlbum);
+
+            itemView.setOnClickListener(v -> {
+                Bundle bundle = new Bundle();
+                bundle.putString("album_title", album.getTitle());
+                bundle.putString("album_image", album.getCoverImage());
+
+                Navigation.findNavController(itemView).navigate(R.id.navigation_album, bundle);
+            });
         }
     }
 }

@@ -52,4 +52,8 @@ public interface ApiService {
     @GET("songs/artist")
     Call<List<Song>> getSongsByArtist(@Query("name") String artistName);
 
+    @GET("songs/album")
+    Call<List<Song>> getSongsByAlbum(@Query("title") String albumTitle);
+
+
 }

@@ -1,7 +1,6 @@
 package fit24.duy.musicplayer.adapters;
 
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,11 +19,11 @@ import java.util.List;
 import fit24.duy.musicplayer.R;
 import fit24.duy.musicplayer.models.Song;
 
-public class ArtistSongAdapter extends RecyclerView.Adapter<ArtistSongAdapter.SongViewHolder> {
+public class AlbumAdapter extends RecyclerView.Adapter<AlbumAdapter.SongViewHolder> {
     private Context context;
     private List<Song> songList;
 
-    public ArtistSongAdapter(Context context, List<Song> songs) {
+    public AlbumAdapter(Context context, List<Song> songs) {
         this.context = context;
         this.songList = songs;
     }
@@ -69,7 +68,6 @@ public class ArtistSongAdapter extends RecyclerView.Adapter<ArtistSongAdapter.So
                     .into(songImage);
 
             moreButton.setOnClickListener(v -> {
-                // TODO: Thêm menu tuỳ chọn bài hát nếu cần
                 Toast.makeText(context, "More clicked: " + song.getTitle(), Toast.LENGTH_SHORT).show();
             });
         }

@@ -13,7 +13,6 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
@@ -25,13 +24,10 @@ import java.util.List;
 
 import fit24.duy.musicplayer.R;
 import fit24.duy.musicplayer.adapters.MusicAdapter;
-import fit24.duy.musicplayer.adapters.SearchResultAdapter;
+import fit24.duy.musicplayer.adapters.SearchAdapter;
 import fit24.duy.musicplayer.api.ApiService;
 import fit24.duy.musicplayer.api.RetrofitClient;
-import fit24.duy.musicplayer.models.Album;
-import fit24.duy.musicplayer.models.Artist;
 import fit24.duy.musicplayer.models.SearchResponse;
-import fit24.duy.musicplayer.models.Song;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -107,7 +103,7 @@ public class SearchResultFragment extends Fragment {
                     results.addAll(response.body().getArtists());
                     results.addAll(response.body().getAlbums());
 
-                    SearchResultAdapter adapter = new SearchResultAdapter(getContext(), results);
+                    SearchAdapter adapter = new SearchAdapter(getContext(), results);
                     searchResultsRecyclerView.setAdapter(adapter);
                 }
             }
