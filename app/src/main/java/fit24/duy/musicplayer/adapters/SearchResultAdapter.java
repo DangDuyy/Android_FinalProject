@@ -1,12 +1,14 @@
 package fit24.duy.musicplayer.adapters;
 
 import android.content.Context;
+import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -115,6 +117,14 @@ public class SearchResultAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
                     .error(R.drawable.default_avatar)
                     .circleCrop()
                     .into(imgArtist);
+
+            itemView.setOnClickListener(v -> {
+                Bundle bundle = new Bundle();
+                bundle.putString("artist_name", artist.getName());
+                bundle.putString("artist_image", artist.getProfileImage());
+
+                Navigation.findNavController(itemView).navigate(R.id.navigation_artist, bundle);
+            });
         }
     }
 

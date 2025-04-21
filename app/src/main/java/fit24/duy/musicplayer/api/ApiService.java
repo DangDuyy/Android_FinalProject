@@ -4,6 +4,7 @@ import java.util.List;
 
 import fit24.duy.musicplayer.models.MediaType;
 import fit24.duy.musicplayer.models.SearchResponse;
+import fit24.duy.musicplayer.models.Song;
 import fit24.duy.musicplayer.models.UserLoginRequest;
 import fit24.duy.musicplayer.models.UserRegisterRequest;
 import fit24.duy.musicplayer.models.UserResponse;
@@ -47,4 +48,8 @@ public interface ApiService {
 
     @GET("search")
     Call<SearchResponse> search(@Query("q") String query);
+
+    @GET("songs/artist")
+    Call<List<Song>> getSongsByArtist(@Query("name") String artistName);
+
 }

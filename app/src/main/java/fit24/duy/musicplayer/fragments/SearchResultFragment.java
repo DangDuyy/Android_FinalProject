@@ -119,18 +119,5 @@ public class SearchResultFragment extends Fragment {
         });
     }
 
-
-
-    @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-        ((AppCompatActivity) requireActivity()).getSupportActionBar().hide();
-    }
-
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        ((AppCompatActivity) requireActivity()).getSupportActionBar().show();
-    }
 }
 

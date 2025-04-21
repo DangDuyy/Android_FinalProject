@@ -41,7 +41,8 @@ public class MainActivity extends AppCompatActivity {
                 R.id.navigation_search,
                 R.id.navigation_library,
                 R.id.navigation_profile,
-                R.id.navigation_search_result
+                R.id.navigation_search_result,
+                R.id.navigation_artist
         ).build();
 
         // Setup the ActionBar with NavController
@@ -49,10 +50,19 @@ public class MainActivity extends AppCompatActivity {
 
         // Setup bottom navigation with NavController
         NavigationUI.setupWithNavController(bottomNavigationView, navController);
+
+        // Listener to manage toolbar visibility
+        navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
+            if (destination.getId() == R.id.navigation_search_result || destination.getId() == R.id.navigation_artist) {
+                getSupportActionBar().hide();  // Ẩn toolbar khi vào trang SearchResult hoặc Artist
+            } else {
+                getSupportActionBar().show();  // Hiển thị toolbar khi vào các trang khác
+            }
+        });
     }
 
     @Override
     public boolean onSupportNavigateUp() {
         return navController.navigateUp() || super.onSupportNavigateUp();
     }
-} 
+}
