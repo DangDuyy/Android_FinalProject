@@ -35,6 +35,8 @@ public class ArtistFragment extends Fragment {
     private ApiService apiService;
     private TextView artistNameView;
     private ImageView artistImageView;
+    private String artistName;
+    private String artistImage;
 
     @Nullable
     @Override
@@ -48,6 +50,23 @@ public class ArtistFragment extends Fragment {
             NavController navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment);
             navController.navigateUp(); // Quay lại trang trước
         });
+
+        ImageButton likeButton = view.findViewById(R.id.like_button);
+        final boolean[] isLiked = {false};
+
+        likeButton.setOnClickListener(v -> {
+            if (isLiked[0]) {
+                // Bỏ like → icon viền trắng
+                likeButton.setImageResource(R.drawable.ic_heart);
+                isLiked[0] = false;
+            } else {
+                // Đã like → icon đỏ
+                likeButton.setImageResource(R.drawable.ic_heart_red);
+                isLiked[0] = true;
+            }
+        });
+
+
 
         ImageButton playButton = view.findViewById(R.id.play_button);
 
@@ -70,12 +89,25 @@ public class ArtistFragment extends Fragment {
             }
         });
 
+        // Nút More
+        ImageButton moreButton = view.findViewById(R.id.more_button);
+        moreButton.setOnClickListener(v -> {
+            Bundle bundle = new Bundle();
+            bundle.putString("artist_name", artistName);
+            bundle.putString("artist_image", artistImage);
+            try {
+                NavController navController = Navigation.findNavController(v);
+                navController.navigate(R.id.navigation_artist_control, bundle);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
 
         // Nhận dữ liệu được truyền qua
         Bundle args = getArguments();
         if (args != null) {
-            String artistName = args.getString("artist_name");
-            String artistImage = args.getString("artist_image");
+            artistName = args.getString("artist_name");
+            artistImage = args.getString("artist_image");
 
             TextView nameView = view.findViewById(R.id.artist_name);
             ImageView imageView = view.findViewById(R.id.artist_image);

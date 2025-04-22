@@ -32,6 +32,8 @@ public class AlbumFragment extends Fragment {
     private RecyclerView recyclerView;
     private AlbumAdapter albumAdapter;
     private ApiService apiService;
+    private String albumTitle;
+    private String albumImage;
 
     @Nullable
     @Override
@@ -39,12 +41,14 @@ public class AlbumFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_album, container, false); // Dùng lại layout artist
         recyclerView = view.findViewById(R.id.album_content_list);
 
+        // Nút Back
         ImageView btnBack = view.findViewById(R.id.btn_back);
         btnBack.setOnClickListener(v -> {
             NavController navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment);
             navController.navigateUp();
         });
 
+        // Nút Play/Pause
         ImageButton playButton = view.findViewById(R.id.play_button);
         final boolean[] isPlaying = {false};
         playButton.setOnClickListener(v -> {
@@ -57,10 +61,44 @@ public class AlbumFragment extends Fragment {
             }
         });
 
+        // Nút like
+        ImageButton likeButton = view.findViewById(R.id.like_button);
+        final boolean[] isLiked = {false};
+
+        likeButton.setOnClickListener(v -> {
+            if (isLiked[0]) {
+                // Bỏ like → icon viền trắng
+                likeButton.setImageResource(R.drawable.ic_heart);
+                isLiked[0] = false;
+            } else {
+                // Đã like → icon đỏ
+                likeButton.setImageResource(R.drawable.ic_heart_red);
+                isLiked[0] = true;
+            }
+        });
+
+
+        // Nút More
+        ImageButton moreButton = view.findViewById(R.id.more_button);
+        moreButton.setOnClickListener(v -> {
+            // Chuẩn bị dữ liệu để gửi đến AlbumControlFragment
+            Bundle bundle = new Bundle();
+            bundle.putString("album_title", albumTitle);
+            bundle.putString("album_image", albumImage);
+
+            // Điều hướng đến AlbumControlFragment
+            try {
+                NavController navController = Navigation.findNavController(v);
+                navController.navigate(R.id.navigation_album_control, bundle);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+
         Bundle args = getArguments();
         if (args != null) {
-            String albumTitle = args.getString("album_title");
-            String albumImage = args.getString("album_image");
+            albumTitle = args.getString("album_title");
+            albumImage = args.getString("album_image");
 
             TextView nameView = view.findViewById(R.id.album_name);
             ImageView imageView = view.findViewById(R.id.album_image);

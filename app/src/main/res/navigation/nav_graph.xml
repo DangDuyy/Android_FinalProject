@@ -38,4 +38,14 @@
             android:id="@+id/navigation_album"
             android:name="fit24.duy.musicplayer.fragments.AlbumFragment"
             android:label="Album" />
+
+        <fragment
+            android:id="@+id/navigation_album_control"
+            android:name="fit24.duy.musicplayer.fragments.AlbumControlFragment"
+            android:label="Album Control" />
+
+        <fragment
+            android:id="@+id/navigation_artist_control"
+            android:name="fit24.duy.musicplayer.fragments.ArtistControlFragment"
+            android:label="Artist Control" />
 </navigation>

@@ -1,6 +1,7 @@
 package fit24.duy.musicplayer.adapters;
 
 import android.content.Context;
+import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,6 +11,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -67,9 +69,16 @@ public class AlbumAdapter extends RecyclerView.Adapter<AlbumAdapter.SongViewHold
                     .placeholder(R.drawable.album_placeholder)
                     .into(songImage);
 
-            moreButton.setOnClickListener(v -> {
-                Toast.makeText(context, "More clicked: " + song.getTitle(), Toast.LENGTH_SHORT).show();
-            });
+//            moreButton.setOnClickListener(v -> {
+//                Toast.makeText(context, "Nút More được nhấn", Toast.LENGTH_SHORT).show();
+//                // Chuẩn bị dữ liệu để gửi đến AlbumControlFragment
+//                Bundle bundle = new Bundle();
+//                bundle.putString("album_title", song.getTitle());
+//                bundle.putString("album_image", song.getCoverImage());
+//
+//                // Điều hướng đến AlbumControlFragment
+//                Navigation.findNavController(v).navigate(R.id.navigation_album_control, bundle);
+//            });
         }
     }
 }
