@@ -7,7 +7,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+import com.squareup.picasso.Picasso;
 import fit24.duy.musicplayer.R;
+import fit24.duy.musicplayer.models.Artist;
 import fit24.duy.musicplayer.models.Song;
 import java.util.List;
 
@@ -27,11 +29,16 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.MusicViewHol
         this.listener = listener;
     }
 
+    public void updateData(List<Song> newSongs) {
+        this.songs = newSongs;
+        notifyDataSetChanged();
+    }
+
     @NonNull
     @Override
     public MusicViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
-            .inflate(R.layout.item_song, parent, false);
+                .inflate(R.layout.item_song, parent, false); // Assuming your item layout is named item_song.xml
         return new MusicViewHolder(view);
     }
 
@@ -49,13 +56,13 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.MusicViewHol
     class MusicViewHolder extends RecyclerView.ViewHolder {
         private ImageView albumArt;
         private TextView title;
-        private TextView artist;
+        private TextView artistName;
 
         public MusicViewHolder(@NonNull View itemView) {
             super(itemView);
-            albumArt = itemView.findViewById(R.id.album_art);
+            albumArt = itemView.findViewById(R.id.album_art); // Make sure these IDs exist in item_song.xml
             title = itemView.findViewById(R.id.song_title);
-            artist = itemView.findViewById(R.id.artist_name);
+            artistName = itemView.findViewById(R.id.artist_name);
 
             itemView.setOnClickListener(v -> {
                 int position = getAdapterPosition();
@@ -65,10 +72,27 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.MusicViewHol
             });
         }
 
+        // Trong class MusicAdapter.MusicViewHolder
+
         public void bind(Song song) {
-            albumArt.setImageResource(song.getAlbumArt());
             title.setText(song.getTitle());
-            artist.setText(song.getArtist().getName());
+            if (song.getArtist() != null) {
+                artistName.setText(song.getArtist().getName());
+            } else {
+                artistName.setText("");
+            }
+
+            // Load album art using Picasso
+            if (song.getCoverImage() != null && !song.getCoverImage().isEmpty()) {
+                String imageUrl = "http://10.0.2.2:8080/uploads/" + song.getCoverImage(); // **Quan trọng: Thay IP server của bạn**
+                Picasso.get()
+                        .load(imageUrl)
+                        .placeholder(R.drawable.album_placeholder)
+                        //.error(R.drawable.error_image)
+                        .into(albumArt);
+            } else {
+                albumArt.setImageResource(R.drawable.album_placeholder);
+            }
         }
     }
-} 
+}

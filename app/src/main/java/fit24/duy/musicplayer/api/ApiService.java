@@ -4,6 +4,7 @@ import java.util.List;
 
 import fit24.duy.musicplayer.models.MediaType;
 import fit24.duy.musicplayer.models.SearchResponse;
+import fit24.duy.musicplayer.models.Song;
 import fit24.duy.musicplayer.models.UserLoginRequest;
 import fit24.duy.musicplayer.models.UserRegisterRequest;
 import fit24.duy.musicplayer.models.UserResponse;
@@ -13,6 +14,7 @@ import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
+import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 public interface ApiService {
@@ -47,4 +49,16 @@ public interface ApiService {
 
     @GET("search")
     Call<SearchResponse> search(@Query("q") String query);
+    @GET("songs/recently-played")
+    Call<List<Song>> getRecentlyPlayed();
+
+    @GET("songs/recommended")
+    Call<List<Song>> getRecommended();
+
+    @GET("songs/{id}")
+    Call<Song> getSongById(@Path("id") Long id);
+
+    @GET("songs/search")
+    Call<List<Song>> searchSongs(@Query("title") String title);
+
 }
