@@ -43,10 +43,6 @@ public class AlbumControlFragment extends Fragment {
         }
 
         // Xử lý các tùy chọn
-        view.findViewById(R.id.option_like).setOnClickListener(v -> {
-            Toast.makeText(requireContext(), "Đã nhấn Like", Toast.LENGTH_SHORT).show();
-        });
-
         view.findViewById(R.id.option_view_artist).setOnClickListener(v -> {
             Toast.makeText(requireContext(), "Đã nhấn View artist", Toast.LENGTH_SHORT).show();
         });

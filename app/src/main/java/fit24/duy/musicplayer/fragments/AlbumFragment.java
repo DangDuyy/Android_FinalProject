@@ -61,22 +61,6 @@ public class AlbumFragment extends Fragment {
             }
         });
 
-        // Nút like
-        ImageButton likeButton = view.findViewById(R.id.like_button);
-        final boolean[] isLiked = {false};
-
-        likeButton.setOnClickListener(v -> {
-            if (isLiked[0]) {
-                // Bỏ like → icon viền trắng
-                likeButton.setImageResource(R.drawable.ic_heart);
-                isLiked[0] = false;
-            } else {
-                // Đã like → icon đỏ
-                likeButton.setImageResource(R.drawable.ic_heart_red);
-                isLiked[0] = true;
-            }
-        });
-
 
         // Nút More
         ImageButton moreButton = view.findViewById(R.id.more_button);
@@ -111,6 +95,8 @@ public class AlbumFragment extends Fragment {
 
             loadSongsByAlbum(albumTitle);
         }
+
+        // hiện thanh search + sort
 
         return view;
     }

@@ -45,10 +45,6 @@ public class ArtistControlFragment extends Fragment {
         }
 
         // Xử lý các tùy chọn
-        view.findViewById(R.id.option_like).setOnClickListener(v -> {
-            Toast.makeText(requireContext(), "Đã nhấn Like", Toast.LENGTH_SHORT).show();
-        });
-
         view.findViewById(R.id.option_follow_artist).setOnClickListener(v -> {
             Toast.makeText(requireContext(), "Đã nhấn Follow artist", Toast.LENGTH_SHORT).show();
         });

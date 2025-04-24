@@ -51,23 +51,6 @@ public class ArtistFragment extends Fragment {
             navController.navigateUp(); // Quay lại trang trước
         });
 
-        ImageButton likeButton = view.findViewById(R.id.like_button);
-        final boolean[] isLiked = {false};
-
-        likeButton.setOnClickListener(v -> {
-            if (isLiked[0]) {
-                // Bỏ like → icon viền trắng
-                likeButton.setImageResource(R.drawable.ic_heart);
-                isLiked[0] = false;
-            } else {
-                // Đã like → icon đỏ
-                likeButton.setImageResource(R.drawable.ic_heart_red);
-                isLiked[0] = true;
-            }
-        });
-
-
-
         ImageButton playButton = view.findViewById(R.id.play_button);
 
         // Biến lưu trạng thái đang phát hay không

@@ -19,6 +19,64 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <!-- Search bar + Sort -->
+    <LinearLayout
+        android:id="@+id/search_sort_bar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="16dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/btn_back"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:orientation="horizontal"
+            android:background="@drawable/bg_search_bar"
+            android:gravity="center_vertical"
+            android:paddingStart="12dp"
+            android:paddingEnd="8dp">
+
+            <ImageView
+                android:id="@+id/btn_search"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_search"
+                android:contentDescription="Search"
+                android:paddingEnd="8dp"
+                app:tint="@color/white" />
+
+            <EditText
+                android:id="@+id/edt_search"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@null"
+                android:hint="Find in playlist"
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                android:textColorHint="#A0A0A0"
+                android:paddingStart="8dp"
+                android:singleLine="true"/>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tv_sort"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Sort"
+            android:textSize="16sp"
+            android:textColor="@color/white"
+            android:paddingStart="12dp"/>
+    </LinearLayout>
+
     <!-- Artist Image -->
     <ImageView
         android:id="@+id/album_image"
@@ -27,7 +85,7 @@
         android:layout_marginTop="50dp"
         android:scaleType="centerCrop"
         android:src="@drawable/placeholder_artist"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/search_sort_bar"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -70,20 +128,12 @@
         android:layout_marginStart="20dp">
 
         <ImageButton
-            android:id="@+id/like_button"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_marginEnd="16dp"
-            android:background="@android:color/transparent"
-            android:src="@drawable/ic_heart" />
-
-        <ImageButton
             android:id="@+id/follow_button"
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:layout_marginEnd="16dp"
             android:background="@android:color/transparent"
-            android:src="@drawable/ic_follow"
+            android:src="@drawable/ic_followalbum"
             app:tint="#FFFFFF" />
 
         <ImageButton
