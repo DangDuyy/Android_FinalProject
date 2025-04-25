@@ -77,7 +77,7 @@ public class AuthController {
         User newUser = new User();
         newUser.setUsername(newUserDTO.getUsername());
         newUser.setEmail(newUserDTO.getEmail());
-        newUser.setPassword(newUserDTO.getPassword()); // Nên mã hóa password trước khi lưu
+        newUser.setPassword(passwordEncoder.encode(newUserDTO.getPassword()));
 
         userRepository.save(newUser);
         return ResponseEntity.ok("User registered successfully");

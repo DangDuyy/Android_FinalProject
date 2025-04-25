@@ -122,6 +122,7 @@ public class SearchAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
                 Bundle bundle = new Bundle();
                 bundle.putString("artist_name", artist.getName());
                 bundle.putString("artist_image", artist.getProfileImage());
+                bundle.putLong("artist_id", artist.getId());
 
                 Navigation.findNavController(itemView).navigate(R.id.navigation_artist, bundle);
             });

@@ -1,6 +1,7 @@
 package fit24.duy.musicplayer.models;
 
 public class Artist {
+    private Long id;
     private String name;
     private String profileImage; // URL
     private String bio;
@@ -9,6 +10,14 @@ public class Artist {
         this.name = name;
         this.profileImage = profileImage;
         this.bio = bio;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getName() {

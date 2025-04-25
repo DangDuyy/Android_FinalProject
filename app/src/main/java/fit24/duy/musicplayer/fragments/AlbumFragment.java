@@ -61,6 +61,17 @@ public class AlbumFragment extends Fragment {
             }
         });
 
+        ImageButton addButton = view.findViewById(R.id.add_button);
+        final boolean[] isAdded = {false}; // Biến trạng thái để theo dõi
+        addButton.setOnClickListener(v -> {
+            if (isAdded[0]) {
+                addButton.setImageResource(R.drawable.ic_add_album);
+                isAdded[0] = false;
+            } else {
+                addButton.setImageResource(R.drawable.ic_check_green);
+                isAdded[0] = true;
+            }
+        });
 
         // Nút More
         ImageButton moreButton = view.findViewById(R.id.more_button);

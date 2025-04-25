@@ -2,6 +2,7 @@ package fit24.duy.musicplayer.api;
 
 import java.util.List;
 
+import fit24.duy.musicplayer.models.ApiResponse;
 import fit24.duy.musicplayer.models.MediaType;
 import fit24.duy.musicplayer.models.SearchResponse;
 import fit24.duy.musicplayer.models.Song;
@@ -10,10 +11,12 @@ import fit24.duy.musicplayer.models.UserRegisterRequest;
 import fit24.duy.musicplayer.models.UserResponse;
 import retrofit2.Call;
 import retrofit2.http.Body;
+import retrofit2.http.DELETE;
 import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
+import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 public interface ApiService {
@@ -55,5 +58,12 @@ public interface ApiService {
     @GET("songs/album")
     Call<List<Song>> getSongsByAlbum(@Query("title") String albumTitle);
 
+    @POST("artists/{artistId}/follow")
+    Call<ApiResponse<String>> followArtist(@Path("artistId") Long artistId, @Query("userId") Long userId);
 
+    @DELETE("artists/{artistId}/unfollow")
+    Call<ApiResponse<String>> unfollowArtist(@Path("artistId") Long artistId, @Query("userId") Long userId);
+
+    @GET("artists/{artistId}/is-followed")
+    Call<ApiResponse<Boolean>> isArtistFollowed(@Path("artistId") Long artistId, @Query("userId") Long userId);
 }
