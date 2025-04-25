@@ -1,6 +1,7 @@
 package fit24.duy.musicplayer.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -25,7 +26,7 @@ public class Album {
 
     @ManyToOne
     @JoinColumn(name = "artist_id", nullable = false)
-    @JsonBackReference
+    @JsonManagedReference
     private Artist artist;
 
     @OneToMany(mappedBy = "album", cascade = CascadeType.ALL, orphanRemoval = true)

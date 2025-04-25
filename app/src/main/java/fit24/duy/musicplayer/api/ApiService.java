@@ -66,4 +66,13 @@ public interface ApiService {
 
     @GET("artists/{artistId}/is-followed")
     Call<ApiResponse<Boolean>> isArtistFollowed(@Path("artistId") Long artistId, @Query("userId") Long userId);
+
+    @POST("albums/{albumId}/add-to-library")
+    Call<ApiResponse<String>> addAlbumToLibrary(@Path("albumId") Long albumId, @Query("userId") Long userId);
+
+    @DELETE("albums/{albumId}/remove-from-library")
+    Call<ApiResponse<String>> removeAlbumFromLibrary(@Path("albumId") Long albumId, @Query("userId") Long userId);
+
+    @GET("albums/{albumId}/is-in-library")
+    Call<ApiResponse<Boolean>> isAlbumInLibrary(@Path("albumId") Long albumId, @Query("userId") Long userId);
 }

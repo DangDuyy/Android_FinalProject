@@ -69,16 +69,6 @@ public class AlbumAdapter extends RecyclerView.Adapter<AlbumAdapter.SongViewHold
                     .placeholder(R.drawable.album_placeholder)
                     .into(songImage);
 
-//            moreButton.setOnClickListener(v -> {
-//                Toast.makeText(context, "Nút More được nhấn", Toast.LENGTH_SHORT).show();
-//                // Chuẩn bị dữ liệu để gửi đến AlbumControlFragment
-//                Bundle bundle = new Bundle();
-//                bundle.putString("album_title", song.getTitle());
-//                bundle.putString("album_image", song.getCoverImage());
-//
-//                // Điều hướng đến AlbumControlFragment
-//                Navigation.findNavController(v).navigate(R.id.navigation_album_control, bundle);
-//            });
         }
     }
 }

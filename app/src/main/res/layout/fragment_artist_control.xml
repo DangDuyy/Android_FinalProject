@@ -36,15 +36,37 @@
         android:orientation="horizontal"
         android:paddingVertical="16dp"
         android:gravity="center_vertical">
-        <ImageView
+        <ImageButton
+            android:id="@+id/follow_button"
             android:layout_width="24dp"
             android:layout_height="24dp"
+            android:background="@android:color/transparent"
             android:src="@drawable/ic_follow" />
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:text="Follow artist"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/option_do_not_play"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingVertical="16dp"
+        android:gravity="center_vertical">
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_block" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:text="Do not play this artist"
             android:textColor="#FFFFFF"
             android:textSize="16sp" />
     </LinearLayout>
@@ -65,26 +87,6 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:text="Share"
-            android:textColor="#FFFFFF"
-            android:textSize="16sp" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/option_add_to_playlist"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:paddingVertical="16dp"
-        android:gravity="center_vertical">
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_playlist" />
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:text="Add to playlist"
             android:textColor="#FFFFFF"
             android:textSize="16sp" />
     </LinearLayout>

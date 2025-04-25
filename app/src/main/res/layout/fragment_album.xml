@@ -89,7 +89,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Artist Name -->
+    <!-- Albume Name -->
     <TextView
         android:id="@+id/album_name"
         android:layout_width="wrap_content"
@@ -103,7 +103,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Artist Info (Genre, Followers) -->
+    <!-- Alnum Info (Genre, Followers) -->
     <TextView
         android:id="@+id/album_info"
         android:layout_width="wrap_content"

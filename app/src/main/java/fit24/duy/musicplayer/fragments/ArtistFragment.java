@@ -36,10 +36,8 @@ public class ArtistFragment extends Fragment {
     private ApiService apiService;
     private TextView artistNameView;
     private ImageView artistImageView;
-    private String artistName;
-    private String artistImage;
-    private Long artistId;
-    private Long userId;
+    private String artistName, artistImage;
+    private Long userId, artistId;
     private ImageButton followButton;
     private boolean isFollowing;
 
@@ -82,6 +80,54 @@ public class ArtistFragment extends Fragment {
 
         // Khởi tạo nút Follow
         followButton = view.findViewById(R.id.follow_button);
+        setupFollowButton();
+
+        // Nút More
+        ImageButton moreButton = view.findViewById(R.id.more_button);
+        moreButton.setOnClickListener(v -> {
+            Bundle bundle = new Bundle();
+            bundle.putString("artist_name", artistName);
+            bundle.putString("artist_image", artistImage);
+            bundle.putLong("artist_id", artistId);
+            try {
+                NavController navController = Navigation.findNavController(v);
+                navController.navigate(R.id.navigation_artist_control, bundle);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+
+        // Nhận dữ liệu được truyền qua
+        Bundle args = getArguments();
+        if (args != null) {
+            artistName = args.getString("artist_name");
+            artistImage = args.getString("artist_image");
+            artistId = args.getLong("artist_id", -1);
+            if (artistId == -1) {
+                Toast.makeText(requireContext(), "Artist ID not found", Toast.LENGTH_SHORT).show();
+                return view;
+            }
+
+            TextView nameView = view.findViewById(R.id.artist_name);
+            ImageView imageView = view.findViewById(R.id.artist_image);
+
+            nameView.setText(artistName);
+            Glide.with(requireContext())
+                    .load("http://10.0.2.2:8080/uploads/" + artistImage + "?t=" + System.currentTimeMillis())
+                    .placeholder(R.drawable.default_avatar)
+                    .error(R.drawable.default_avatar)
+                    .circleCrop()
+                    .into(imageView);
+
+            // Kiểm tra trạng thái follow sau khi artistId được xác nhận
+            checkFollowStatus();
+            loadSongsByArtist(artistName);
+        }
+
+        return view;
+    }
+
+    private void setupFollowButton() {
         followButton.setOnClickListener(v -> {
             String TAG = "ArtistFragment-Follow";
 
@@ -129,49 +175,6 @@ public class ArtistFragment extends Fragment {
                 });
             }
         });
-
-        // Nút More
-        ImageButton moreButton = view.findViewById(R.id.more_button);
-        moreButton.setOnClickListener(v -> {
-            Bundle bundle = new Bundle();
-            bundle.putString("artist_name", artistName);
-            bundle.putString("artist_image", artistImage);
-            try {
-                NavController navController = Navigation.findNavController(v);
-                navController.navigate(R.id.navigation_artist_control, bundle);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
-
-        // Nhận dữ liệu được truyền qua
-        Bundle args = getArguments();
-        if (args != null) {
-            artistName = args.getString("artist_name");
-            artistImage = args.getString("artist_image");
-            artistId = args.getLong("artist_id", -1);
-            if (artistId == -1) {
-                Toast.makeText(requireContext(), "Artist ID not found", Toast.LENGTH_SHORT).show();
-                return view;
-            }
-
-            TextView nameView = view.findViewById(R.id.artist_name);
-            ImageView imageView = view.findViewById(R.id.artist_image);
-
-            nameView.setText(artistName);
-            Glide.with(requireContext())
-                    .load("http://10.0.2.2:8080/uploads/" + artistImage + "?t=" + System.currentTimeMillis())
-                    .placeholder(R.drawable.default_avatar)
-                    .error(R.drawable.default_avatar)
-                    .circleCrop()
-                    .into(imageView);
-
-            // Kiểm tra trạng thái follow sau khi artistId được xác nhận
-            checkFollowStatus();
-            loadSongsByArtist(artistName);
-        }
-
-        return view;
     }
 
     private void checkFollowStatus() {

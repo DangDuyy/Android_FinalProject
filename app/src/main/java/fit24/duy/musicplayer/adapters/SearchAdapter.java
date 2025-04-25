@@ -2,6 +2,7 @@ package fit24.duy.musicplayer.adapters;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -152,6 +153,11 @@ public class SearchAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
                 Bundle bundle = new Bundle();
                 bundle.putString("album_title", album.getTitle());
                 bundle.putString("album_image", album.getCoverImage());
+                bundle.putLong("album_id", album.getId());
+                // truyền thông tin nghệ sĩ
+                bundle.putLong("artist_id", album.getArtist().getId());
+                bundle.putString("artist_name", album.getArtist().getName());
+                bundle.putString("artist_image", album.getArtist().getProfileImage());
 
                 Navigation.findNavController(itemView).navigate(R.id.navigation_album, bundle);
             });
