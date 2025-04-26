@@ -3,11 +3,17 @@ package fit24.duy.musicplayer.controller;
 import fit24.duy.musicplayer.entity.Artist;
 import fit24.duy.musicplayer.entity.User;
 import fit24.duy.musicplayer.model.Response;
+import fit24.duy.musicplayer.repository.UserRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/artists")
@@ -15,6 +21,9 @@ public class ArtistController {
 
     @PersistenceContext
     private EntityManager entityManager;
+
+    @Autowired
+    private UserRepository userRepository;
 
     // API để follow artist
     @PostMapping("/{artistId}/follow")
@@ -75,5 +84,18 @@ public class ArtistController {
         return ResponseEntity.ok().body(
                 new Response<>(true, "Follow status retrieved successfully", isFollowed)
         );
+    }
+
+    // Lấy danh sách nghệ sĩ mà người dùng đã theo dõi
+    @GetMapping("/followed_artists/{userId}")
+    public ResponseEntity<List<Artist>> getFollowedArtists(@PathVariable Long userId) {
+        Optional<User> userOptional = userRepository.findById(userId);
+        if (userOptional.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        User user = userOptional.get();
+        Set<Artist> followedArtists = user.getFollowedArtists();
+        return ResponseEntity.ok(followedArtists.stream().toList());
     }
 }

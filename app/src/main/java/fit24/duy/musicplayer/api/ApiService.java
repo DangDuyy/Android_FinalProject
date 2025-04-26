@@ -2,7 +2,9 @@ package fit24.duy.musicplayer.api;
 
 import java.util.List;
 
+import fit24.duy.musicplayer.models.Album;
 import fit24.duy.musicplayer.models.ApiResponse;
+import fit24.duy.musicplayer.models.Artist;
 import fit24.duy.musicplayer.models.MediaType;
 import fit24.duy.musicplayer.models.SearchResponse;
 import fit24.duy.musicplayer.models.Song;
@@ -75,4 +77,10 @@ public interface ApiService {
 
     @GET("albums/{albumId}/is-in-library")
     Call<ApiResponse<Boolean>> isAlbumInLibrary(@Path("albumId") Long albumId, @Query("userId") Long userId);
+
+    @GET("artists/followed_artists/{userId}")
+    Call<List<Artist>> getFollowedArtists(@Path("userId") Long userId);
+
+    @GET("albums/library/{userId}")
+    Call<List<Album>> getLibraryAlbums(@Path("userId") Long userId);
 }
