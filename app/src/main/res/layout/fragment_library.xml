@@ -153,7 +153,7 @@
                     android:id="@+id/liked_songs_description"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Playlist • 58 songs"
+                    android:text="📌 Playlist • 58 songs"
                     android:textSize="14sp"/>
             </LinearLayout>
         </LinearLayout>
@@ -193,7 +193,7 @@
                     android:id="@+id/new_episodes_description"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Updated 2 days ago"
+                    android:text="📌 Updated 2 days ago"
                     android:textSize="14sp"/>
             </LinearLayout>
         </LinearLayout>

@@ -1,0 +1,61 @@
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#1A1A1A">
+
+    <!-- Nút Back -->
+    <ImageView
+        android:id="@+id/btn_back"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:src="@drawable/ic_back"
+        android:contentDescription="Back"
+        android:paddingEnd="8dp"
+        app:tint="@color/white"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Media Type Name -->
+    <TextView
+        android:id="@+id/media_type_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Media Type Name"
+        android:textColor="#FFFFFF"
+        android:textSize="34sp"
+        android:textStyle="bold"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintTop_toBottomOf="@id/btn_back"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <!-- Media Type Description -->
+    <TextView
+        android:id="@+id/media_type_description"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Description"
+        android:textColor="#B0B0B0"
+        android:textSize="16sp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@id/media_type_name"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <!-- Songs List (RecyclerView with Grid Layout) -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/media_type_list"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="16dp"
+        app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+        app:spanCount="2"
+        app:layout_constraintTop_toBottomOf="@id/media_type_description"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:padding="16dp" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -6,6 +6,7 @@ import fit24.duy.musicplayer.models.Album;
 import fit24.duy.musicplayer.models.ApiResponse;
 import fit24.duy.musicplayer.models.Artist;
 import fit24.duy.musicplayer.models.MediaType;
+import fit24.duy.musicplayer.models.MediaTypeResponse;
 import fit24.duy.musicplayer.models.SearchResponse;
 import fit24.duy.musicplayer.models.Song;
 import fit24.duy.musicplayer.models.UserLoginRequest;
@@ -50,6 +51,9 @@ public interface ApiService {
 
     @GET("media-types")
     Call<List<MediaType>> getMediaTypes();
+
+    @GET("media-types/{mediaTypeId}")
+    Call<List<MediaTypeResponse>> getSongsByMediaType(@Path("mediaTypeId") Long mediaTypeId);
 
     @GET("search")
     Call<SearchResponse> search(@Query("q") String query);

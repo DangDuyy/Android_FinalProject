@@ -87,7 +87,7 @@ public class LibraryFragment extends Fragment {
         TextView likedSongsDescription = view.findViewById(R.id.liked_songs_description);
 
         likedSongsTitle.setText("Liked Songs");
-        likedSongsDescription.setText("Playlist • 58 songs");
+        likedSongsDescription.setText("\uD83D\uDCCC Playlist • 58 songs");
         Glide.with(this)
                 .load(R.drawable.liked_songs)
                 .into(likedSongsImage);
@@ -100,7 +100,7 @@ public class LibraryFragment extends Fragment {
         TextView newEpisodesDescription = view.findViewById(R.id.new_episodes_description);
 
         newEpisodesTitle.setText("New Episodes");
-        newEpisodesDescription.setText("Updated 2 days ago");
+        newEpisodesDescription.setText("\uD83D\uDCCC Updated 2 days ago");
         Glide.with(this)
                 .load(R.drawable.new_episodes)
                 .into(newEpisodesImage);
