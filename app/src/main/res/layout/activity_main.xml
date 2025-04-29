@@ -39,4 +39,10 @@
         app:titleTextColor="@android:color/white"
         tools:ignore="MissingConstraints" />
 
+    <fit24.duy.musicplayer.adapters.PlayerBar
+        android:id="@+id/playerBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toTopOf="@id/bottom_navigation"/>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

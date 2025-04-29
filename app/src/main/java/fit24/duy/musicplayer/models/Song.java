@@ -6,7 +6,8 @@ public class Song {
     private int albumArt;
     private String coverImage;
     private String duration;
-    private String url;
+    private String filePath;
+    private static final String BASE_URL = "http://10.0.2.2:8080/"; // URL của server của bạn
 
     public Song(String title, Artist artist, int albumArt) {
         this.title = title;
@@ -46,12 +47,12 @@ public class Song {
         this.duration = duration;
     }
 
-    public String getUrl() {
-        return url;
+    public String getFilePath() {
+        return filePath;
     }
 
-    public void setUrl(String url) {
-        this.url = url;
+    public void setFilePath(String filePath) {
+        this.filePath = filePath;
     }
 
     public String getCoverImage() {
@@ -60,5 +61,10 @@ public class Song {
 
     public void setCoverImage(String coverImage) {
         this.coverImage = coverImage;
+    }
+
+    public String getAudioUrl() {
+        // Kết hợp BASE_URL với file_path để tạo URL đầy đủ
+        return BASE_URL + "uploads/" + filePath;
     }
 }

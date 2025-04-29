@@ -12,9 +12,10 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import fit24.duy.musicplayer.R;
 import fit24.duy.musicplayer.adapters.MusicAdapter;
+import fit24.duy.musicplayer.adapters.PlayerBar;
 import fit24.duy.musicplayer.api.ApiClient;
 import fit24.duy.musicplayer.api.ApiService;
-import fit24.duy.musicplayer.models.Song; // Ensure this import is correct
+import fit24.duy.musicplayer.models.Song;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -28,6 +29,7 @@ public class HomeFragment extends Fragment {
     private MusicAdapter recentlyPlayedAdapter;
     private MusicAdapter recommendedAdapter;
     private ApiService apiService;
+    private PlayerBar playerBar;
 
     @Nullable
     @Override
@@ -38,6 +40,9 @@ public class HomeFragment extends Fragment {
         recentlyPlayedRecyclerView = view.findViewById(R.id.recently_played_recycler_view);
         recommendedRecyclerView = view.findViewById(R.id.recommended_recycler_view);
 
+        // Get reference to PlayerBar from activity
+        playerBar = requireActivity().findViewById(R.id.playerBar);
+
         // Set up layouts
         LinearLayoutManager recentlyPlayedLayoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
         recentlyPlayedRecyclerView.setLayoutManager(recentlyPlayedLayoutManager);
@@ -47,6 +52,10 @@ public class HomeFragment extends Fragment {
         // Initialize adapters with empty lists
         recentlyPlayedAdapter = new MusicAdapter(new ArrayList<>());
         recommendedAdapter = new MusicAdapter(new ArrayList<>());
+
+        // Set click listeners for adapters
+        recentlyPlayedAdapter.setOnItemClickListener(this::onSongSelected);
+        recommendedAdapter.setOnItemClickListener(this::onSongSelected);
 
         // Set adapters
         recentlyPlayedRecyclerView.setAdapter(recentlyPlayedAdapter);
@@ -62,6 +71,20 @@ public class HomeFragment extends Fragment {
         return view;
     }
 
+    private void onSongSelected(Song song) {
+        if (playerBar != null && song != null) {
+            String artistName = song.getArtist() != null ? song.getArtist().getName() : getString(R.string.unknown_artist);
+            playerBar.setSongInfo(
+                    song.getTitle(),
+                    artistName,
+                    song.getCoverImage(),
+                    song.getAudioUrl(), // hoặc song.getUrl() nếu đúng tên trường
+                    song
+            );
+            playerBar.setPlaying(true);
+        }
+    }
+
     private void fetchRecentlyPlayedSongs() {
         Call<List<Song>> call = apiService.getRecentlyPlayed();
         call.enqueue(new Callback<List<Song>>() {
@@ -71,14 +94,12 @@ public class HomeFragment extends Fragment {
                     recentlyPlayedAdapter.updateData(response.body());
                 } else {
                     Log.e("HomeFragment", "Failed to fetch recently played songs: " + response.code());
-                    // Handle error (e.g., show a message to the user)
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<List<Song>> call, @NonNull Throwable t) {
                 Log.e("HomeFragment", "Error fetching recently played songs: " + t.getMessage());
-                // Handle failure (e.g., show a network error message)
             }
         });
     }
@@ -92,14 +113,12 @@ public class HomeFragment extends Fragment {
                     recommendedAdapter.updateData(response.body());
                 } else {
                     Log.e("HomeFragment", "Failed to fetch recommended songs: " + response.code());
-                    // Handle error
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<List<Song>> call, @NonNull Throwable t) {
                 Log.e("HomeFragment", "Error fetching recommended songs: " + t.getMessage());
-                // Handle failure
             }
         });
     }
