@@ -5,7 +5,7 @@ public class Song {
     private Artist artist;
     private int albumArt;
     private String coverImage;
-    private String duration;
+    private String lyrics;
     private String filePath;
     private static final String BASE_URL = "http://10.0.2.2:8080/"; // URL của server của bạn
 
@@ -39,12 +39,12 @@ public class Song {
         this.albumArt = albumArt;
     }
 
-    public String getDuration() {
-        return duration;
+    public String getLyrics() {
+        return lyrics;
     }
 
-    public void setDuration(String duration) {
-        this.duration = duration;
+    public void setLyrics(String lyrics) {
+        this.lyrics = lyrics;
     }
 
     public String getFilePath() {

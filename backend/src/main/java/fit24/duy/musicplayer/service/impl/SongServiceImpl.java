@@ -13,6 +13,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -44,17 +45,17 @@ public class SongServiceImpl implements SongService {
         }
         return List.of();
     }
+
     @Override
     public List<Song> getRecommendedSongs() {
-        // Implementation for recommended songs would go here
-        // This could involve analyzing user's listening history, liked songs, etc.
-        // For now, let's return a placeholder
-        return songRepository.findAll().stream().limit(7).collect(Collectors.toList());
+        // TODO: Implement recommendation logic
+        return songRepository.findAll().subList(0, Math.min(5, songRepository.findAll().size()));
     }
 
     @Override
     public Song getSongById(Long id) {
-        return songRepository.findById(id).orElse(null);
+        Optional<Song> song = songRepository.findById(id);
+        return song.orElse(null);
     }
 
     @Override
@@ -70,5 +71,33 @@ public class SongServiceImpl implements SongService {
     @Override
     public void deleteSong(Long id) {
         songRepository.deleteById(id);
+    }
+
+    @Override
+    public List<Song> getAllSongs() {
+        return songRepository.findAll();
+    }
+
+    @Override
+    public Song createSong(Song song) {
+        return songRepository.save(song);
+    }
+
+    @Override
+    public Song updateSong(Song song) {
+        if (songRepository.existsById(song.getId())) {
+            return songRepository.save(song);
+        }
+        return null;
+    }
+
+    @Override
+    public List<Song> getSongsByArtist(Long artistId) {
+        return songRepository.findByArtistId(artistId);
+    }
+
+    @Override
+    public List<Song> getSongsByAlbum(Long albumId) {
+        return songRepository.findByAlbumId(albumId);
     }
 }
