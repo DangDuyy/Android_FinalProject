@@ -19,6 +19,8 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
 
 import com.bumptech.glide.Glide;
 
@@ -88,6 +90,12 @@ public class PlayerActivity extends AppCompatActivity implements EditLyricsDialo
         } else {
             requestPermission();
         }
+
+        // Nút back
+        ImageView btnBack = findViewById(R.id.btn_back);
+        btnBack.setOnClickListener(v -> {
+            finish();
+        });
     }
 
     private void initializeViews() {

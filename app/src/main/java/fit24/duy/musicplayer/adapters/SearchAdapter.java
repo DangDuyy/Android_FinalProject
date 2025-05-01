@@ -47,7 +47,7 @@ public class SearchAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(context);
         if (viewType == TYPE_SONG) {
-            View view = inflater.inflate(R.layout.item_song, parent, false);
+            View view = inflater.inflate(R.layout.item_song_artist, parent, false);
             return new SongViewHolder(view);
         } else if (viewType == TYPE_ARTIST) {
             View view = inflater.inflate(R.layout.item_artist, parent, false);
