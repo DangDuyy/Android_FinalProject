@@ -14,6 +14,7 @@ import com.bumptech.glide.Glide;
 import fit24.duy.musicplayer.R;
 import fit24.duy.musicplayer.models.Song;
 import fit24.duy.musicplayer.activities.PlayerActivity;
+import fit24.duy.musicplayer.utils.UrlUtils;
 
 public class PlayerBar extends ConstraintLayout {
     private static final String TAG = "PlayerBar";
@@ -47,10 +48,10 @@ public class PlayerBar extends ConstraintLayout {
         LayoutInflater.from(context).inflate(R.layout.player_bar, this, true);
         
         // Initialize views
-        songThumbnail = findViewById(R.id.songThumbnail);
-        songTitle = findViewById(R.id.songTitle);
-        artistName = findViewById(R.id.artistName);
-        playPauseButton = findViewById(R.id.playPauseButton);
+        songThumbnail = findViewById(R.id.song_thumbnail);
+        songTitle = findViewById(R.id.song_title);
+        artistName = findViewById(R.id.artist_name);
+        playPauseButton = findViewById(R.id.play_pause_button);
 
         // Set click listener for play/pause button
         playPauseButton.setOnClickListener(v -> togglePlayPause());
@@ -61,19 +62,9 @@ public class PlayerBar extends ConstraintLayout {
         // Set click listener for the entire PlayerBar
         setOnClickListener(v -> {
             if (currentSong != null) {
-                try {
-                    Intent intent = new Intent(context, PlayerActivity.class);
-                    intent.putExtra("SONG_TITLE", currentSong.getTitle());
-                    intent.putExtra("SONG_ARTIST", currentSong.getArtist() != null ? currentSong.getArtist().getName() : "");
-                    intent.putExtra("SONG_IMAGE", currentSong.getCoverImage());
-                    intent.putExtra("SONG_URL", currentSong.getAudioUrl());
-                    Log.d(TAG, "Starting PlayerActivity with URL: " + currentSong.getAudioUrl());
-                    context.startActivity(intent);
-                } catch (Exception e) {
-                    Log.e(TAG, "Error starting PlayerActivity", e);
-                }
-            } else {
-                Log.e(TAG, "No current song available");
+                Intent intent = new Intent(context, PlayerActivity.class);
+                intent.putExtra("song", currentSong); // Pass the entire song object
+                context.startActivity(intent);
             }
         });
     }
@@ -82,9 +73,10 @@ public class PlayerBar extends ConstraintLayout {
         songTitle.setText(title);
         artistName.setText(artist);
         
-        // Load image using Glide
+        // Load image using Glide with UrlUtils
+        String processedImageUrl = UrlUtils.getImageUrl(imageUrl);
         Glide.with(context)
-            .load(imageUrl)
+            .load(processedImageUrl)
             .centerCrop()
             .into(songThumbnail);
             

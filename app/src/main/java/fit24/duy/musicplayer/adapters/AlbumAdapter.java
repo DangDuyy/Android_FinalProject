@@ -1,7 +1,6 @@
 package fit24.duy.musicplayer.adapters;
 
 import android.content.Context;
-import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,7 +10,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -20,6 +18,7 @@ import java.util.List;
 
 import fit24.duy.musicplayer.R;
 import fit24.duy.musicplayer.models.Song;
+import fit24.duy.musicplayer.utils.UrlUtils;
 
 public class AlbumAdapter extends RecyclerView.Adapter<AlbumAdapter.SongViewHolder> {
     private Context context;
@@ -33,7 +32,7 @@ public class AlbumAdapter extends RecyclerView.Adapter<AlbumAdapter.SongViewHold
     @NonNull
     @Override
     public SongViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(context).inflate(R.layout.item_song_artist, parent, false);
+        View view = LayoutInflater.from(context).inflate(R.layout.item_song_album, parent, false);
         return new SongViewHolder(view);
     }
 
@@ -64,11 +63,18 @@ public class AlbumAdapter extends RecyclerView.Adapter<AlbumAdapter.SongViewHold
             songTitle.setText(song.getTitle());
             songArtist.setText(song.getArtist().getName());
 
+            String imageUrl = UrlUtils.getImageUrl(song.getCoverImage());
             Glide.with(context)
-                    .load("http://10.0.2.2:8080/uploads/" + song.getCoverImage() + "?t=" + System.currentTimeMillis())
-                    .placeholder(R.drawable.album_placeholder)
-                    .into(songImage);
+                .load(imageUrl)
+                .placeholder(R.drawable.album_placeholder)
+                .error(R.drawable.album_placeholder)
+                .centerCrop()
+                .into(songImage);
 
+            moreButton.setOnClickListener(v -> {
+                // TODO: Thêm menu tuỳ chọn bài hát nếu cần
+                Toast.makeText(context, "More clicked: " + song.getTitle(), Toast.LENGTH_SHORT).show();
+            });
         }
     }
 }

@@ -15,6 +15,7 @@ import java.util.List;
 import fit24.duy.musicplayer.R;
 import fit24.duy.musicplayer.models.Album;
 import fit24.duy.musicplayer.models.Artist;
+import fit24.duy.musicplayer.utils.UrlUtils;
 
 public class LibraryItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private static final int TYPE_ARTIST = 0;
@@ -78,12 +79,14 @@ public class LibraryItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
         public void bind(Artist artist) {
             artistName.setText(artist.getName());
+            
+            String imageUrl = UrlUtils.getImageUrl(artist.getProfileImage());
             Glide.with(itemView.getContext())
-                    .load("http://10.0.2.2:8080/uploads/" + artist.getProfileImage() + "?t=" + System.currentTimeMillis())
-                    .placeholder(R.drawable.default_avatar)
-                    .error(R.drawable.default_avatar)
-                    .circleCrop()
-                    .into(artistImage);
+                .load(imageUrl)
+                .placeholder(R.drawable.default_avatar)
+                .error(R.drawable.default_avatar)
+                .circleCrop()
+                .into(artistImage);
 
             itemView.setOnClickListener(v -> {
                 Bundle bundle = new Bundle();
@@ -109,12 +112,14 @@ public class LibraryItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         public void bind(Album album) {
             albumTitle.setText(album.getTitle());
             artistName.setText(album.getArtist() != null ? album.getArtist().getName() : "Unknown Artist");
+            
+            String imageUrl = UrlUtils.getImageUrl(album.getCoverImage());
             Glide.with(itemView.getContext())
-                    .load("http://10.0.2.2:8080/uploads/" + album.getCoverImage() + "?t=" + System.currentTimeMillis())
-                    .placeholder(R.drawable.album_placeholder)
-                    .error(R.drawable.album_placeholder)
-                    .centerCrop()
-                    .into(albumImage);
+                .load(imageUrl)
+                .placeholder(R.drawable.album_placeholder)
+                .error(R.drawable.album_placeholder)
+                .centerCrop()
+                .into(albumImage);
 
             itemView.setOnClickListener(v -> {
                 Bundle bundle = new Bundle();

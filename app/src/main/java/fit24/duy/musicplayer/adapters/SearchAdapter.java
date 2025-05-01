@@ -20,6 +20,7 @@ import fit24.duy.musicplayer.R;
 import fit24.duy.musicplayer.models.Album;
 import fit24.duy.musicplayer.models.Artist;
 import fit24.duy.musicplayer.models.Song;
+import fit24.duy.musicplayer.utils.UrlUtils;
 
 public class SearchAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private static final int TYPE_SONG = 0;
@@ -46,7 +47,7 @@ public class SearchAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(context);
         if (viewType == TYPE_SONG) {
-            View view = inflater.inflate(R.layout.item_song_artist, parent, false);
+            View view = inflater.inflate(R.layout.item_song, parent, false);
             return new SongViewHolder(view);
         } else if (viewType == TYPE_ARTIST) {
             View view = inflater.inflate(R.layout.item_artist, parent, false);
@@ -90,13 +91,15 @@ public class SearchAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
 
         public void bind(Song song) {
             tvTitle.setText(song.getTitle());
-            tvArtist.setText("Bài hát •" + song.getArtist().getName());
+            tvArtist.setText("Bài hát • " + song.getArtist().getName());
+            
+            String imageUrl = UrlUtils.getImageUrl(song.getCoverImage());
             Glide.with(itemView.getContext())
-                    .load("http://10.0.2.2:8080/uploads/" + song.getCoverImage() + "?t=" + System.currentTimeMillis())
-                    .placeholder(R.drawable.album_placeholder)
-                    .error(R.drawable.album_placeholder)
-                    .centerCrop()
-                    .into(imgCover);
+                .load(imageUrl)
+                .placeholder(R.drawable.album_placeholder)
+                .error(R.drawable.album_placeholder)
+                .centerCrop()
+                .into(imgCover);
         }
     }
 
@@ -112,19 +115,20 @@ public class SearchAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
 
         public void bind(Artist artist) {
             tvName.setText(artist.getName());
+            
+            String imageUrl = UrlUtils.getImageUrl(artist.getProfileImage());
             Glide.with(itemView.getContext())
-                    .load("http://10.0.2.2:8080/uploads/" + artist.getProfileImage() + "?t=" + System.currentTimeMillis())
-                    .placeholder(R.drawable.default_avatar)
-                    .error(R.drawable.default_avatar)
-                    .circleCrop()
-                    .into(imgArtist);
+                .load(imageUrl)
+                .placeholder(R.drawable.default_avatar)
+                .error(R.drawable.default_avatar)
+                .circleCrop()
+                .into(imgArtist);
 
             itemView.setOnClickListener(v -> {
                 Bundle bundle = new Bundle();
                 bundle.putString("artist_name", artist.getName());
                 bundle.putString("artist_image", artist.getProfileImage());
                 bundle.putLong("artist_id", artist.getId());
-
                 Navigation.findNavController(itemView).navigate(R.id.navigation_artist, bundle);
             });
         }
@@ -142,12 +146,14 @@ public class SearchAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
 
         public void bind(Album album) {
             tvTitle.setText(album.getTitle());
+            
+            String imageUrl = UrlUtils.getImageUrl(album.getCoverImage());
             Glide.with(itemView.getContext())
-                    .load("http://10.0.2.2:8080/uploads/" + album.getCoverImage() + "?t=" + System.currentTimeMillis())
-                    .placeholder(R.drawable.album_placeholder)
-                    .error(R.drawable.album_placeholder)
-                    .centerCrop()
-                    .into(imgAlbum);
+                .load(imageUrl)
+                .placeholder(R.drawable.album_placeholder)
+                .error(R.drawable.album_placeholder)
+                .centerCrop()
+                .into(imgAlbum);
 
             itemView.setOnClickListener(v -> {
                 Bundle bundle = new Bundle();

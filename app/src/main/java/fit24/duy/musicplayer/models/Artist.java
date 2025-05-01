@@ -1,6 +1,8 @@
 package fit24.duy.musicplayer.models;
 
-public class Artist {
+import java.io.Serializable;
+
+public class Artist implements Serializable {
     private Long id;
     private String name;
     private String profileImage; // URL

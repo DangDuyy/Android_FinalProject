@@ -1,8 +1,10 @@
 package fit24.duy.musicplayer.activities;
 
+import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.util.Log;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.navigation.NavController;
@@ -15,6 +17,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import fit24.duy.musicplayer.R;
 import fit24.duy.musicplayer.adapters.PlayerBar;
 import fit24.duy.musicplayer.models.Song;
+import fit24.duy.musicplayer.utils.SessionManager;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
@@ -23,41 +26,32 @@ public class MainActivity extends AppCompatActivity {
     private PlayerBar playerBar;
     private MediaPlayer mediaPlayer;
     private boolean isPlaying = false;
+    private SessionManager sessionManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Initialize SessionManager
+        sessionManager = new SessionManager(this);
+
+        // Check if user is logged in
+        if (!sessionManager.isLoggedIn()) {
+            startActivity(new Intent(this, WelcomeActivity.class));
+            finish();
+            return;
+        }
+
+        // Setup toolbar
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        // Initialize bottom navigation
-        bottomNavigationView = findViewById(R.id.bottom_navigation);
+        // Setup navigation
+        setupNavigation();
 
-        // Setup navigation controller
-        NavHostFragment navHostFragment =
-                (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment);
-        navController = navHostFragment.getNavController();
-
-        // Initialize player bar
-        playerBar = findViewById(R.id.playerBar);
-
-        // Configure the top level destinations
-        AppBarConfiguration appBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.navigation_home,
-                R.id.navigation_search,
-                R.id.navigation_library,
-                R.id.navigation_profile,
-                R.id.navigation_search_result,
-                R.id.navigation_artist
-        ).build();
-
-        // Setup the ActionBar with NavController
-        NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
-
-        // Setup bottom navigation with NavController
-        NavigationUI.setupWithNavController(bottomNavigationView, navController);
+        // Setup player bar
+        setupPlayerBar();
 
         // Listener to manage toolbar visibility
         navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
@@ -78,6 +72,33 @@ public class MainActivity extends AppCompatActivity {
                 pauseMusic();
             }
         });
+    }
+
+    public void logout() {
+        // Clear session
+        sessionManager.logout();
+
+        // Navigate to welcome screen
+        startActivity(new Intent(this, WelcomeActivity.class));
+        finish();
+    }
+
+    private void setupNavigation() {
+        NavHostFragment navHostFragment = (NavHostFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.nav_host_fragment);
+        navController = navHostFragment.getNavController();
+
+        bottomNavigationView = findViewById(R.id.bottom_navigation);
+        AppBarConfiguration appBarConfiguration = new AppBarConfiguration.Builder(
+                R.id.navigation_home, R.id.navigation_search, R.id.navigation_library, R.id.navigation_profile
+        ).build();
+
+        NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
+        NavigationUI.setupWithNavController(bottomNavigationView, navController);
+    }
+
+    private void setupPlayerBar() {
+        playerBar = new PlayerBar(this);
     }
 
     @Override

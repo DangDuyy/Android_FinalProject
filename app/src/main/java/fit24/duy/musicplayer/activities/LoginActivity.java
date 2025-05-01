@@ -1,7 +1,6 @@
 package fit24.duy.musicplayer.activities;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.widget.Toast;
@@ -15,6 +14,7 @@ import fit24.duy.musicplayer.api.ApiClient;
 import fit24.duy.musicplayer.api.ApiService;
 import fit24.duy.musicplayer.models.UserLoginRequest;
 import fit24.duy.musicplayer.models.UserResponse;
+import fit24.duy.musicplayer.utils.SessionManager;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -22,11 +22,15 @@ import retrofit2.Response;
 public class LoginActivity extends AppCompatActivity {
     private TextInputEditText edtEmail;
     private TextInputEditText edtPassword;
+    private SessionManager sessionManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+
+        // Initialize SessionManager
+        sessionManager = new SessionManager(this);
 
         // Initialize views
         edtEmail = findViewById(R.id.edtEmail);
@@ -69,13 +73,13 @@ public class LoginActivity extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null) {
                     UserResponse user = response.body();
 
-                    // Lưu thông tin người dùng vào SharedPreferences
-                    SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
-                    SharedPreferences.Editor editor = prefs.edit();
-                    editor.putLong("user_id", user.getId());
-                    editor.putString("username", user.getUsername());
-                    editor.putString("email", user.getEmail());
-                    editor.apply();
+                    // Lưu phiên đăng nhập với SessionManager
+                    sessionManager.createLoginSession(
+                        String.valueOf(user.getId()),
+                        user.getUsername(),
+                        user.getEmail(),
+                        user.getToken()
+                    );
 
                     // Chuyển hướng đến MainActivity
                     startActivity(new Intent(LoginActivity.this, MainActivity.class));

@@ -31,6 +31,9 @@ public class SongController {
     @Autowired
     private AlbumRepository albumRepository;
 
+    @Autowired
+    private SongService songService;
+
     // Lấy bài hát theo tên nghệ sĩ
     @GetMapping("/artist")
     public List<SongResponse> getSongsByArtistName(@RequestParam("name") String artistName) {
@@ -68,17 +71,23 @@ public class SongController {
         }).collect(Collectors.toList());
     }
 
-    private SongService songService;
-
     @GetMapping("/recently-played")
     public ResponseEntity<List<Song>> getRecentlyPlayedSongs() {
         List<Song> recentlyPlayed = songService.getRecentlyPlayedSongs();
+        if (recentlyPlayed.isEmpty()) {
+            // Nếu không có bài hát đã phát gần đây, trả về 5 bài hát mới nhất
+            recentlyPlayed = songRepository.findTop5ByOrderByIdDesc();
+        }
         return new ResponseEntity<>(recentlyPlayed, HttpStatus.OK);
     }
 
     @GetMapping("/recommended")
     public ResponseEntity<List<Song>> getRecommendedSongs() {
         List<Song> recommended = songService.getRecommendedSongs();
+        if (recommended.isEmpty()) {
+            // Nếu không có bài hát được đề xuất, trả về 5 bài hát ngẫu nhiên
+            recommended = songRepository.findTop5ByOrderByPlayCountDesc();
+        }
         return new ResponseEntity<>(recommended, HttpStatus.OK);
     }
 

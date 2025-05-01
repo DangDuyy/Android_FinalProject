@@ -1,18 +1,28 @@
 package fit24.duy.musicplayer.models;
 
-public class Song {
+import java.io.Serializable;
+
+public class Song implements Serializable {
+    private Long id;
     private String title;
-    private Artist artist;
-    private int albumArt;
     private String coverImage;
+    private String audioUrl;
+    private Artist artist;
+    private Album album;
+    private MediaType mediaType;
+    private int duration;
+    private int playCount;
     private String lyrics;
+    private int albumArt;
     private String filePath;
     private static final String BASE_URL = "http://10.0.2.2:8080/"; // URL của server của bạn
 
-    public Song(String title, Artist artist, int albumArt) {
-        this.title = title;
-        this.artist = artist;
-        this.albumArt = albumArt;
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getTitle() {
@@ -64,7 +74,46 @@ public class Song {
     }
 
     public String getAudioUrl() {
-        // Kết hợp BASE_URL với file_path để tạo URL đầy đủ
-        return BASE_URL + "uploads/" + filePath;
+        if (audioUrl != null && !audioUrl.isEmpty()) {
+            return audioUrl;
+        }
+        // Nếu không có audioUrl, sử dụng filePath
+        return filePath != null ? BASE_URL + "uploads/" + filePath : null;
+    }
+
+    public void setAudioUrl(String audioUrl) {
+        this.audioUrl = audioUrl;
+    }
+
+    public Album getAlbum() {
+        return album;
+    }
+
+    public void setAlbum(Album album) {
+        this.album = album;
+    }
+
+    public MediaType getMediaType() {
+        return mediaType;
+    }
+
+    public void setMediaType(MediaType mediaType) {
+        this.mediaType = mediaType;
+    }
+
+    public int getDuration() {
+        return duration;
+    }
+
+    public void setDuration(int duration) {
+        this.duration = duration;
+    }
+
+    public int getPlayCount() {
+        return playCount;
+    }
+
+    public void setPlayCount(int playCount) {
+        this.playCount = playCount;
     }
 }

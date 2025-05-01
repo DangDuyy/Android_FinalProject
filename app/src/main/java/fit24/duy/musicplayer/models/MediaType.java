@@ -1,6 +1,8 @@
 package fit24.duy.musicplayer.models;
 
-public class MediaType {
+import java.io.Serializable;
+
+public class MediaType implements Serializable {
     private Long id;
     private String name;
     private String description;

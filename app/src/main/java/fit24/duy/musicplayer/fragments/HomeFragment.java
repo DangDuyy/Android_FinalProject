@@ -5,6 +5,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
+import android.widget.TextView;
+import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -24,21 +27,32 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class HomeFragment extends Fragment {
+    private static final String TAG = "HomeFragment";
     private RecyclerView recentlyPlayedRecyclerView;
     private RecyclerView recommendedRecyclerView;
     private MusicAdapter recentlyPlayedAdapter;
     private MusicAdapter recommendedAdapter;
     private ApiService apiService;
     private PlayerBar playerBar;
+    private ProgressBar recentlyPlayedProgress;
+    private ProgressBar recommendedProgress;
+    private TextView recentlyPlayedEmpty;
+    private TextView recommendedEmpty;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
-        // Initialize RecyclerViews
+        Log.d(TAG, "onCreateView: Initializing HomeFragment");
+
+        // Initialize views
         recentlyPlayedRecyclerView = view.findViewById(R.id.recently_played_recycler_view);
         recommendedRecyclerView = view.findViewById(R.id.recommended_recycler_view);
+        recentlyPlayedProgress = view.findViewById(R.id.recently_played_progress);
+        recommendedProgress = view.findViewById(R.id.recommended_progress);
+        recentlyPlayedEmpty = view.findViewById(R.id.recently_played_empty);
+        recommendedEmpty = view.findViewById(R.id.recommended_empty);
 
         // Get reference to PlayerBar from activity
         playerBar = requireActivity().findViewById(R.id.playerBar);
@@ -64,6 +78,12 @@ public class HomeFragment extends Fragment {
         // Initialize API service
         apiService = ApiClient.getClient().create(ApiService.class);
 
+        // Show loading indicators
+        recentlyPlayedProgress.setVisibility(View.VISIBLE);
+        recommendedProgress.setVisibility(View.VISIBLE);
+        recentlyPlayedEmpty.setVisibility(View.GONE);
+        recommendedEmpty.setVisibility(View.GONE);
+
         // Fetch data
         fetchRecentlyPlayedSongs();
         fetchRecommendedSongs();
@@ -78,7 +98,7 @@ public class HomeFragment extends Fragment {
                     song.getTitle(),
                     artistName,
                     song.getCoverImage(),
-                    song.getAudioUrl(), // hoặc song.getUrl() nếu đúng tên trường
+                    song.getAudioUrl(),
                     song
             );
             playerBar.setPlaying(true);
@@ -86,39 +106,79 @@ public class HomeFragment extends Fragment {
     }
 
     private void fetchRecentlyPlayedSongs() {
+        Log.d(TAG, "fetchRecentlyPlayedSongs: Starting API call");
         Call<List<Song>> call = apiService.getRecentlyPlayed();
         call.enqueue(new Callback<List<Song>>() {
             @Override
             public void onResponse(@NonNull Call<List<Song>> call, @NonNull Response<List<Song>> response) {
+                recentlyPlayedProgress.setVisibility(View.GONE);
                 if (response.isSuccessful() && response.body() != null) {
-                    recentlyPlayedAdapter.updateData(response.body());
+                    List<Song> songs = response.body();
+                    Log.d(TAG, "fetchRecentlyPlayedSongs: Success! Received " + songs.size() + " songs");
+                    if (songs.isEmpty()) {
+                        recentlyPlayedEmpty.setVisibility(View.VISIBLE);
+                    } else {
+                        recentlyPlayedEmpty.setVisibility(View.GONE);
+                        recentlyPlayedAdapter.updateData(songs);
+                    }
                 } else {
-                    Log.e("HomeFragment", "Failed to fetch recently played songs: " + response.code());
+                    Log.e(TAG, "fetchRecentlyPlayedSongs: Failed with code " + response.code());
+                    recentlyPlayedEmpty.setVisibility(View.VISIBLE);
+                    if (response.errorBody() != null) {
+                        try {
+                            Log.e(TAG, "Error body: " + response.errorBody().string());
+                        } catch (Exception e) {
+                            Log.e(TAG, "Error reading error body", e);
+                        }
+                    }
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<List<Song>> call, @NonNull Throwable t) {
-                Log.e("HomeFragment", "Error fetching recently played songs: " + t.getMessage());
+                Log.e(TAG, "fetchRecentlyPlayedSongs: Network error", t);
+                recentlyPlayedProgress.setVisibility(View.GONE);
+                recentlyPlayedEmpty.setVisibility(View.VISIBLE);
+                Toast.makeText(getContext(), "Failed to load recently played songs", Toast.LENGTH_SHORT).show();
             }
         });
     }
 
     private void fetchRecommendedSongs() {
+        Log.d(TAG, "fetchRecommendedSongs: Starting API call");
         Call<List<Song>> call = apiService.getRecommended();
         call.enqueue(new Callback<List<Song>>() {
             @Override
             public void onResponse(@NonNull Call<List<Song>> call, @NonNull Response<List<Song>> response) {
+                recommendedProgress.setVisibility(View.GONE);
                 if (response.isSuccessful() && response.body() != null) {
-                    recommendedAdapter.updateData(response.body());
+                    List<Song> songs = response.body();
+                    Log.d(TAG, "fetchRecommendedSongs: Success! Received " + songs.size() + " songs");
+                    if (songs.isEmpty()) {
+                        recommendedEmpty.setVisibility(View.VISIBLE);
+                    } else {
+                        recommendedEmpty.setVisibility(View.GONE);
+                        recommendedAdapter.updateData(songs);
+                    }
                 } else {
-                    Log.e("HomeFragment", "Failed to fetch recommended songs: " + response.code());
+                    Log.e(TAG, "fetchRecommendedSongs: Failed with code " + response.code());
+                    recommendedEmpty.setVisibility(View.VISIBLE);
+                    if (response.errorBody() != null) {
+                        try {
+                            Log.e(TAG, "Error body: " + response.errorBody().string());
+                        } catch (Exception e) {
+                            Log.e(TAG, "Error reading error body", e);
+                        }
+                    }
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<List<Song>> call, @NonNull Throwable t) {
-                Log.e("HomeFragment", "Error fetching recommended songs: " + t.getMessage());
+                Log.e(TAG, "fetchRecommendedSongs: Network error", t);
+                recommendedProgress.setVisibility(View.GONE);
+                recommendedEmpty.setVisibility(View.VISIBLE);
+                Toast.makeText(getContext(), "Failed to load recommended songs", Toast.LENGTH_SHORT).show();
             }
         });
     }

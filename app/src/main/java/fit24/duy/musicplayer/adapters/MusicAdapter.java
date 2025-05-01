@@ -3,14 +3,15 @@ package fit24.duy.musicplayer.adapters;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.squareup.picasso.Picasso;
+import de.hdodenhof.circleimageview.CircleImageView;
 import fit24.duy.musicplayer.R;
 import fit24.duy.musicplayer.models.Artist;
 import fit24.duy.musicplayer.models.Song;
+import fit24.duy.musicplayer.utils.UrlUtils;
 import java.util.List;
 
 /**
@@ -84,7 +85,7 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.MusicViewHol
      * ViewHolder class for song items. Holds references to the views within the item layout.
      */
     class MusicViewHolder extends RecyclerView.ViewHolder {
-        private ImageView albumArt;
+        private CircleImageView albumArt;
         private TextView title;
         private TextView artistName;
 
@@ -127,22 +128,11 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.MusicViewHol
             // --- Load album art using Picasso ---
             String coverImage = song.getCoverImage();
             if (coverImage != null && !coverImage.isEmpty()) {
-                String imageUrl;
-                // Check if coverImage is a full URL (like Cloudinary)
-                if (coverImage.startsWith("http://") || coverImage.startsWith("https://")) {
-                    imageUrl = coverImage; // Use the full URL directly
-                } else {
-                    // Assume it's a filename and construct the local server URL
-                    // **Important: Replace "10.0.2.2:8080" with your actual server IP/domain if needed**
-                    // "10.0.2.2" is typically used to access the host machine's localhost from an Android emulator.
-                    imageUrl = "http://10.0.2.2:8080/uploads/" + coverImage;
-                }
-
-                // Load the image using Picasso
+                String imageUrl = UrlUtils.getImageUrl(coverImage);
                 Picasso.get()
                         .load(imageUrl)
                         .placeholder(R.drawable.album_placeholder) // Image shown while loading
-                        .error(R.drawable.ic_broken_image) // Optional: Image shown on error (ensure you have this drawable)
+                        .error(R.drawable.album_placeholder) // Optional: Image shown on error (ensure you have this drawable)
                         .into(albumArt);
             } else {
                 // Set a default placeholder image if no cover image is available

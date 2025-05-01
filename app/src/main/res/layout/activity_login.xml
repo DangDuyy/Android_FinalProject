@@ -20,7 +20,7 @@
             android:layout_height="48dp"
             android:src="@drawable/ic_back"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:tint="@color/white"/>
+            app:tint="@color/white"/>
 
         <TextView
             android:layout_width="0dp"
