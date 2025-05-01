@@ -1,5 +1,6 @@
 package fit24.duy.musicplayer.service.impl;
 
+import fit24.duy.musicplayer.dto.MediaTypeResponse;
 import fit24.duy.musicplayer.entity.PlayHistory;
 import fit24.duy.musicplayer.entity.Song;
 import fit24.duy.musicplayer.entity.User;
@@ -100,4 +101,19 @@ public class SongServiceImpl implements SongService {
     public List<Song> getSongsByAlbum(Long albumId) {
         return songRepository.findByAlbumId(albumId);
     }
+
+    @Override
+    public List<MediaTypeResponse> getSongsByMediaType(Long mediaTypeId) {
+        List<Song> songs = songRepository.findByMediaTypeId(mediaTypeId);
+        return songs.stream()
+                .map(song -> new MediaTypeResponse(
+                        song.getId(),
+                        song.getTitle(),
+                        song.getCoverImage(),
+                        song.getFilePath(),
+                        song.getPlayCount()
+                ))
+                .collect(Collectors.toList());
+    }
+
 }
