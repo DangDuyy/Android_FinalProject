@@ -87,4 +87,16 @@ public interface ApiService {
 
     @GET("albums/library/{userId}")
     Call<List<Album>> getLibraryAlbums(@Path("userId") Long userId);
+    @GET("songs/recently-played")
+    Call<List<Song>> getRecentlyPlayed();
+
+    @GET("songs/recommended")
+    Call<List<Song>> getRecommended();
+
+    @GET("songs/{id}")
+    Call<Song> getSongById(@Path("id") Long id);
+
+    @GET("songs/search")
+    Call<List<Song>> searchSongs(@Query("title") String title);
+
 }

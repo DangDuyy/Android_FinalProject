@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
-import java.time.Duration;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -22,7 +21,9 @@ public class Song {
 
     private String coverImage;
     private String filePath;
-    private Duration duration;
+
+    @Column(columnDefinition = "TEXT")
+    private String lyrics;
 
     @ManyToOne
     @JoinColumn(name = "artist_id", nullable = false)
