@@ -16,12 +16,12 @@ public class WelcomeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         
         // Check if user is already logged in
-        sessionManager = new SessionManager(this);
-        if (sessionManager.isLoggedIn()) {
-            startActivity(new Intent(this, MainActivity.class));
-            finish();
-            return;
-        }
+//        sessionManager = new SessionManager(this);
+//        if (sessionManager.isLoggedIn()) {
+//            startActivity(new Intent(this, MainActivity.class));
+//            finish();
+//            return;
+//        }
         
         setContentView(R.layout.activity_welcome);
 
