@@ -1,6 +1,5 @@
 package fit24.duy.musicplayer.fragments;
 
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,6 +23,7 @@ import fit24.duy.musicplayer.api.ApiClient;
 import fit24.duy.musicplayer.api.ApiService;
 import fit24.duy.musicplayer.models.Album;
 import fit24.duy.musicplayer.models.Artist;
+import fit24.duy.musicplayer.utils.SessionManager;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -42,6 +42,7 @@ public class LibraryFragment extends Fragment {
     private TextView filterHeaderText; // Tiêu đề lọc (Playlists, Artists, Albums)
     private TextView btnCloseFilter; // Nút X để đóng lọc
     private Button btnPlaylists, btnArtists, btnAlbums, btnPodcasts;
+    private SessionManager sessionManager;
 
     private List<Object> allItems = new ArrayList<>(); // Lưu toàn bộ Artists và Albums
 
@@ -50,14 +51,23 @@ public class LibraryFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_library, container, false);
 
+        // Khởi tạo SessionManager
+        sessionManager = new SessionManager(requireContext());
+
         // Khởi tạo ApiService
         apiService = ApiClient.getClient().create(ApiService.class);
 
-        // Lấy userId từ SharedPreferences
-        SharedPreferences prefs = requireContext().getSharedPreferences("UserPrefs", requireContext().MODE_PRIVATE);
-        userId = prefs.getLong("user_id", -1);
-        if (userId == -1) {
-            Toast.makeText(requireContext(), "Người dùng chưa đăng nhập", Toast.LENGTH_SHORT).show();
+        // Lấy userId từ SessionManager
+        String userIdString = sessionManager.getUserId();
+        if (userIdString == null || userIdString.isEmpty()) {
+            Toast.makeText(requireContext(), "User not logged in", Toast.LENGTH_SHORT).show();
+            return view;
+        }
+
+        try {
+            userId = Long.parseLong(userIdString);
+        } catch (NumberFormatException e) {
+            Toast.makeText(requireContext(), "Invalid user ID", Toast.LENGTH_SHORT).show();
             return view;
         }
 

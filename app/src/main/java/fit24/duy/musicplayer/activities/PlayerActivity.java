@@ -26,12 +26,19 @@ import androidx.navigation.Navigation;
 import com.bumptech.glide.Glide;
 
 import fit24.duy.musicplayer.R;
+import fit24.duy.musicplayer.api.ApiClient;
+import fit24.duy.musicplayer.api.ApiService;
 import fit24.duy.musicplayer.dialogs.EditLyricsDialog;
+import fit24.duy.musicplayer.models.ApiResponse;
 import fit24.duy.musicplayer.models.Song;
 import fit24.duy.musicplayer.utils.LyricsManager;
+import fit24.duy.musicplayer.utils.SessionManager;
 import fit24.duy.musicplayer.utils.UrlUtils;
 import fit24.duy.musicplayer.visualizer.MusicVisualizerView;
 import fit24.duy.musicplayer.visualizer.VisualizerService;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 import java.io.InputStream;
 import java.util.concurrent.TimeUnit;
@@ -44,9 +51,9 @@ import org.json.JSONObject;
 public class PlayerActivity extends AppCompatActivity implements EditLyricsDialog.EditLyricsListener {
     private static final String TAG = "PlayerActivity";
     private static final int PERMISSION_REQUEST_CODE = 123;
-    
+
     private MediaPlayer mediaPlayer;
-    private ImageButton btnPlayPause, btnNext, btnPrev, btnShuffle, btnRepeat, btnMenu;
+    private ImageButton btnPlayPause, btnNext, btnPrev, btnShuffle, btnRepeat, btnMenu, btnLike;
     private SeekBar seekBar;
     private TextView tvCurrentTime, tvDuration;
     private ImageView imgAlbumArt;
@@ -55,8 +62,12 @@ public class PlayerActivity extends AppCompatActivity implements EditLyricsDialo
     private ImageButton editLyricsButton;
     private Handler handler = new Handler(Looper.getMainLooper());
     private boolean isPlaying = false;
+    private boolean isLiked = false;
     private LyricsManager lyricsManager;
     private boolean isRepeat = false;
+    private Long userId, songId;
+    private ApiService apiService;
+    private SessionManager sessionManager;
 
     // Visualizer variables
     private MusicVisualizerView visualizerView;
@@ -76,9 +87,12 @@ public class PlayerActivity extends AppCompatActivity implements EditLyricsDialo
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_player);
 
+        // Initialize SessionManager
+        sessionManager = new SessionManager(this);
+
         // Initialize views
         initializeViews();
-        
+
         // Setup MediaPlayer
         setupMediaPlayer();
 
@@ -97,6 +111,9 @@ public class PlayerActivity extends AppCompatActivity implements EditLyricsDialo
         btnBack.setOnClickListener(v -> {
             finish();
         });
+
+        // Kiểm tra trạng thái Like khi tải fragment
+        checkSongLiked();
     }
 
     private void initializeViews() {
@@ -116,13 +133,34 @@ public class PlayerActivity extends AppCompatActivity implements EditLyricsDialo
         editLyricsButton = findViewById(R.id.editLyricsButton);
         visualizerView = findViewById(R.id.visualizer);
         btnMenu = findViewById(R.id.btn_menu);
+        btnLike = findViewById(R.id.btn_like);
+
+        // Khởi tạo ApiService
+        apiService = ApiClient.getClient().create(ApiService.class);
+
+        // Lấy userId từ SessionManager
+        String userIdString = sessionManager.getUserId();
+        if (userIdString == null || userIdString.isEmpty()) {
+            Toast.makeText(this, "User not logged in", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+
+        try {
+            userId = Long.parseLong(userIdString);
+        } catch (NumberFormatException e) {
+            Toast.makeText(this, "Invalid user ID", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
 
         // Get data from Intent
         Song song = (Song) getIntent().getSerializableExtra("song");
         if (song != null) {
+            songId = song.getId();
             tvSongTitle.setText(song.getTitle());
             tvArtist.setText(song.getArtist() != null ? song.getArtist().getName() : "Unknown Artist");
-            
+
             // Load image using Glide with UrlUtils
             String imageUrl = UrlUtils.getImageUrl(song.getCoverImage());
             Glide.with(this)
@@ -148,7 +186,7 @@ public class PlayerActivity extends AppCompatActivity implements EditLyricsDialo
                 mediaPlayer.release();
             }
             mediaPlayer = new MediaPlayer();
-            
+
             // Set audio attributes for proper audio focus handling
             mediaPlayer.setAudioAttributes(
                 new AudioAttributes.Builder()
@@ -163,39 +201,39 @@ public class PlayerActivity extends AppCompatActivity implements EditLyricsDialo
             });
 
             mediaPlayer.setDataSource(audioUrl);
-            
+
             // Show loading indicator
             // TODO: Add a loading indicator in your layout
             Log.d(TAG, "Starting media preparation...");
-            
+
             mediaPlayer.setOnPreparedListener(mp -> {
                 try {
                     int duration = mp.getDuration();
                     Log.d(TAG, "Media duration from file: " + duration + "ms");
-                    
+
                     if (duration > 0) {
                         tvDuration.setText(formatTime(duration));
                         seekBar.setMax(duration);
-                        
+
                         // Hide loading indicator here
                         mp.start();
                         isPlaying = true;
                         updatePlayPauseButton();
                         startProgressUpdates();
-                        
+
                         // Initialize LyricsManager after MediaPlayer is prepared
                         lyricsManager = new LyricsManager(mediaPlayer, currentLyricText, nextLyricText);
-                        
+
                         // Fetch lyrics if available
                         if (song.getId() != null) {
                             fetchLyricsFromDatabase(song.getId().toString());
                         }
-                        
+
                         // Initialize visualizer after MediaPlayer is prepared
                         if (checkPermission()) {
                             initializeVisualizer();
                         }
-                        
+
                         Log.d(TAG, "MediaPlayer started successfully");
                     } else {
                         Log.e(TAG, "Invalid duration received from media file");
@@ -278,6 +316,7 @@ public class PlayerActivity extends AppCompatActivity implements EditLyricsDialo
             Intent intent = new Intent(PlayerActivity.this, SongControlActivity.class);
             Song song = (Song) getIntent().getSerializableExtra("song");
             if (song != null) {
+                intent.putExtra("song_id", song.getId());
                 intent.putExtra("song_title", song.getTitle());
                 intent.putExtra("artist_name", song.getArtist() != null ? song.getArtist().getName() : "Unknown Artist");
                 intent.putExtra("album_art_url", UrlUtils.getImageUrl(song.getCoverImage()));
@@ -299,6 +338,15 @@ public class PlayerActivity extends AppCompatActivity implements EditLyricsDialo
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+
+        // Xử lý sự kiện nhấn nút Like
+        btnLike.setOnClickListener(v -> {
+            if (isLiked) {
+                unlikeSong();
+            } else {
+                likeSong();
+            }
         });
     }
 
@@ -395,7 +443,7 @@ public class PlayerActivity extends AppCompatActivity implements EditLyricsDialo
     private void fetchLyricsFromDatabase(String songId) {
         String apiUrl = UrlUtils.getBackendUrl() + "/api/songs/" + songId + "/lyrics";
         Log.d(TAG, "Fetching lyrics from: " + apiUrl);
-        
+
         new Thread(() -> {
             HttpURLConnection connection = null;
             try {
@@ -405,11 +453,11 @@ public class PlayerActivity extends AppCompatActivity implements EditLyricsDialo
                 connection.setRequestProperty("Accept", "application/json");
                 connection.setConnectTimeout(5000);
                 connection.setReadTimeout(5000);
-                
+
                 Log.d(TAG, "Connecting to API...");
                 int responseCode = connection.getResponseCode();
                 Log.d(TAG, "Response code: " + responseCode);
-                
+
                 if (responseCode == HttpURLConnection.HTTP_OK) {
                     InputStream inputStream;
                     if (responseCode >= 400) {
@@ -417,25 +465,25 @@ public class PlayerActivity extends AppCompatActivity implements EditLyricsDialo
                     } else {
                         inputStream = connection.getInputStream();
                     }
-                    
+
                     BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
                     StringBuilder response = new StringBuilder();
                     String line;
-                    
+
                     while ((line = reader.readLine()) != null) {
                         response.append(line);
                     }
                     reader.close();
-                    
+
                     String responseBody = response.toString();
                     Log.d(TAG, "Response body: " + responseBody);
-                    
+
                     // Parse JSON response
                     JSONObject jsonResponse = new JSONObject(responseBody);
                     String lyrics = jsonResponse.optString("lyrics", "");
-                    
+
                     Log.d(TAG, "Parsed lyrics: " + lyrics);
-                    
+
                     // Update UI on main thread
                     runOnUiThread(() -> {
                         if (!lyrics.isEmpty()) {
@@ -478,7 +526,7 @@ public class PlayerActivity extends AppCompatActivity implements EditLyricsDialo
         if (isPlaying) {
             lyricsManager.start();
         }
-        
+
         // Save lyrics to database
         Song song = (Song) getIntent().getSerializableExtra("song");
         if (song != null && song.getId() != null) {
@@ -488,7 +536,7 @@ public class PlayerActivity extends AppCompatActivity implements EditLyricsDialo
 
     private void saveLyricsToDatabase(String songId, String lyrics) {
         String apiUrl = UrlUtils.getBackendUrl() + "/api/songs/" + songId + "/lyrics";
-        
+
         new Thread(() -> {
             try {
                 URL url = new URL(apiUrl);
@@ -496,14 +544,14 @@ public class PlayerActivity extends AppCompatActivity implements EditLyricsDialo
                 connection.setRequestMethod("POST");
                 connection.setRequestProperty("Content-Type", "application/json");
                 connection.setDoOutput(true);
-                
+
                 // Create JSON body
                 JSONObject jsonBody = new JSONObject();
                 jsonBody.put("lyrics", lyrics);
-                
+
                 // Send request
                 connection.getOutputStream().write(jsonBody.toString().getBytes());
-                
+
                 int responseCode = connection.getResponseCode();
                 if (responseCode != HttpURLConnection.HTTP_OK) {
                     Log.e(TAG, "Error saving lyrics: " + responseCode);
@@ -515,7 +563,7 @@ public class PlayerActivity extends AppCompatActivity implements EditLyricsDialo
     }
 
     private boolean checkPermission() {
-        return ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) 
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
             == PackageManager.PERMISSION_GRANTED;
     }
 
@@ -526,7 +574,7 @@ public class PlayerActivity extends AppCompatActivity implements EditLyricsDialo
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, 
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                          @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == PERMISSION_REQUEST_CODE) {
@@ -550,7 +598,7 @@ public class PlayerActivity extends AppCompatActivity implements EditLyricsDialo
         btnVisualizerType.setOnClickListener(v -> {
             isWaveform = !isWaveform;
             visualizerService.setVisualizerType(isWaveform);
-            btnVisualizerType.setImageResource(isWaveform ? 
+            btnVisualizerType.setImageResource(isWaveform ?
                 R.drawable.ic_waveform : R.drawable.ic_spectrum);
         });
 
@@ -564,6 +612,86 @@ public class PlayerActivity extends AppCompatActivity implements EditLyricsDialo
         if (isPlaying) {
             visualizerService.startVisualizing();
         }
+    }
+
+    private void checkSongLiked() {
+        if (songId == null || userId == null) {
+            Toast.makeText(this, "Invalid song or user ID", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Call<ApiResponse<Boolean>> call = apiService.isSongLiked(songId, userId);
+        call.enqueue(new Callback<ApiResponse<Boolean>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<Boolean>> call, Response<ApiResponse<Boolean>> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().getSuccess()) {
+                    isLiked = response.body().getData();
+                    btnLike.setImageResource(isLiked ? R.drawable.ic_heart_red : R.drawable.ic_heart);
+                } else {
+                    String errorMsg = response.body() != null ? response.body().getMessage() : response.message();
+                    Toast.makeText(PlayerActivity.this, "Failed to check like status: " + errorMsg, Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<Boolean>> call, Throwable t) {
+                Toast.makeText(PlayerActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void likeSong() {
+        if (songId == null || userId == null) {
+            Toast.makeText(this, "Invalid song or user ID", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Call<ApiResponse<String>> call = apiService.likeSong(songId, userId);
+        call.enqueue(new Callback<ApiResponse<String>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<String>> call, Response<ApiResponse<String>> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().getSuccess()) {
+                    isLiked = true;
+                    btnLike.setImageResource(R.drawable.ic_heart_red);
+                    Toast.makeText(PlayerActivity.this, response.body().getMessage(), Toast.LENGTH_SHORT).show();
+                } else {
+                    String errorMsg = response.body() != null ? response.body().getMessage() : response.message();
+                    Toast.makeText(PlayerActivity.this, "Failed to like: " + errorMsg, Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<String>> call, Throwable t) {
+                Toast.makeText(PlayerActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void unlikeSong() {
+        if (songId == null || userId == null) {
+            Toast.makeText(this, "Invalid song or user ID", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Call<ApiResponse<String>> call = apiService.unlikeSong(songId, userId);
+        call.enqueue(new Callback<ApiResponse<String>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<String>> call, Response<ApiResponse<String>> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().getSuccess()) {
+                    isLiked = false;
+                    btnLike.setImageResource(R.drawable.ic_heart);
+                    Toast.makeText(PlayerActivity.this, response.body().getMessage(), Toast.LENGTH_SHORT).show();
+                } else {
+                    String errorMsg = response.body() != null ? response.body().getMessage() : response.message();
+                    Toast.makeText(PlayerActivity.this, "Failed to unlike: " + errorMsg, Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<String>> call, Throwable t) {
+                Toast.makeText(PlayerActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     @Override
@@ -586,4 +714,10 @@ public class PlayerActivity extends AppCompatActivity implements EditLyricsDialo
             visualizerService = null;
         }
     }
-} 
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        checkSongLiked();
+    }
+}

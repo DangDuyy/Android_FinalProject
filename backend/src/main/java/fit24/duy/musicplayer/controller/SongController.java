@@ -1,24 +1,26 @@
 package fit24.duy.musicplayer.controller;
 
+import fit24.duy.musicplayer.dto.LyricsDTO;
 import fit24.duy.musicplayer.dto.SongResponse;
 import fit24.duy.musicplayer.entity.Album;
 import fit24.duy.musicplayer.entity.Song;
+import fit24.duy.musicplayer.entity.User;
+import fit24.duy.musicplayer.model.Response;
 import fit24.duy.musicplayer.repository.AlbumRepository;
 import fit24.duy.musicplayer.repository.SongRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.stream.Collectors;
-import fit24.duy.musicplayer.dto.LyricsDTO;
-import fit24.duy.musicplayer.entity.Song;
+import fit24.duy.musicplayer.repository.UserRepository;
 import fit24.duy.musicplayer.service.SongService;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/songs")
@@ -33,6 +35,12 @@ public class SongController {
 
     @Autowired
     private SongService songService;
+
+    @PersistenceContext
+    private EntityManager entityManager;
+
+    @Autowired
+    private UserRepository userRepository;
 
     // Lấy bài hát theo tên nghệ sĩ
     @GetMapping("/artist")
@@ -168,5 +176,94 @@ public class SongController {
         return ResponseEntity.ok(lyricsDTO);
     }
 
-    // Add other song-related endpoints as needed
+    // API để người dùng like một bài hát
+    @PostMapping("/{songId}/like")
+    @Transactional
+    public ResponseEntity<Response<String>> likeSong(@PathVariable Long songId, @RequestParam Long userId) {
+        User user = entityManager.find(User.class, userId);
+        Song song = entityManager.find(Song.class, songId);
+
+        if (user == null || song == null) {
+            return ResponseEntity.badRequest().body(
+                    new Response<>(false, "User or Song not found", null)
+            );
+        }
+
+        if (song.getLikedByUsers().contains(user)) {
+            return ResponseEntity.badRequest().body(
+                    new Response<>(false, "Song already liked", null)
+            );
+        }
+
+        song.getLikedByUsers().add(user);
+        entityManager.merge(song);
+
+        return ResponseEntity.ok().body(
+                new Response<>(true, "Song liked successfully", null)
+        );
+    }
+
+    // API để người dùng unlike một bài hát
+    @DeleteMapping("/{songId}/unlike")
+    @Transactional
+    public ResponseEntity<Response<String>> unlikeSong(@PathVariable Long songId, @RequestParam Long userId) {
+        User user = entityManager.find(User.class, userId);
+        Song song = entityManager.find(Song.class, songId);
+
+        if (user == null || song == null) {
+            return ResponseEntity.badRequest().body(
+                    new Response<>(false, "User or Song not found", null)
+            );
+        }
+
+        if (!song.getLikedByUsers().contains(user)) {
+            return ResponseEntity.badRequest().body(
+                    new Response<>(false, "Song not liked", null)
+            );
+        }
+
+        song.getLikedByUsers().remove(user);
+        entityManager.merge(song);
+
+        return ResponseEntity.ok().body(
+                new Response<>(true, "Song unliked successfully", null)
+        );
+    }
+
+    // API để kiểm tra xem người dùng đã like bài hát chưa
+    @GetMapping("/{songId}/is-liked")
+    @Transactional(readOnly = true)
+    public ResponseEntity<Response<Boolean>> isSongLiked(@PathVariable Long songId, @RequestParam Long userId) {
+        User user = entityManager.find(User.class, userId);
+        Song song = entityManager.find(Song.class, songId);
+
+        if (user == null || song == null) {
+            return ResponseEntity.badRequest().body(
+                    new Response<>(false, "User or Song not found", null)
+            );
+        }
+
+        boolean isLiked = song.getLikedByUsers().contains(user);
+        return ResponseEntity.ok().body(
+                new Response<>(true, "Like status retrieved successfully", isLiked)
+        );
+    }
+
+    // API để lấy danh sách bài hát đã like của người dùng
+    @GetMapping("/liked/{userId}")
+    @Transactional
+    public ResponseEntity<List<Song>> getLikedSongs(@PathVariable Long userId) {
+        Optional<User> userOptional = userRepository.findById(userId);
+        if (userOptional.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        User user = userOptional.get();
+        List<Song> likedSongs = entityManager.createQuery(
+                        "SELECT s FROM Song s JOIN s.likedByUsers u WHERE u.id = :userId", Song.class)
+                .setParameter("userId", userId)
+                .getResultList();
+
+        return ResponseEntity.ok(likedSongs);
+    }
 }
