@@ -1,6 +1,7 @@
 package fit24.duy.musicplayer.activities;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.media.AudioAttributes;
 import android.media.MediaPlayer;
@@ -45,7 +46,7 @@ public class PlayerActivity extends AppCompatActivity implements EditLyricsDialo
     private static final int PERMISSION_REQUEST_CODE = 123;
     
     private MediaPlayer mediaPlayer;
-    private ImageButton btnPlayPause, btnNext, btnPrev, btnShuffle, btnRepeat;
+    private ImageButton btnPlayPause, btnNext, btnPrev, btnShuffle, btnRepeat, btnMenu;
     private SeekBar seekBar;
     private TextView tvCurrentTime, tvDuration;
     private ImageView imgAlbumArt;
@@ -114,6 +115,7 @@ public class PlayerActivity extends AppCompatActivity implements EditLyricsDialo
         nextLyricText = findViewById(R.id.nextLyricText);
         editLyricsButton = findViewById(R.id.editLyricsButton);
         visualizerView = findViewById(R.id.visualizer);
+        btnMenu = findViewById(R.id.btn_menu);
 
         // Get data from Intent
         Song song = (Song) getIntent().getSerializableExtra("song");
@@ -270,6 +272,18 @@ public class PlayerActivity extends AppCompatActivity implements EditLyricsDialo
         btnShuffle.setOnClickListener(v -> toggleShuffle());
         btnRepeat.setOnClickListener(v -> toggleRepeat());
         editLyricsButton.setOnClickListener(v -> showEditLyricsDialog());
+
+        // Xử lý sự kiện nhấp vào nút menu
+        btnMenu.setOnClickListener(v -> {
+            Intent intent = new Intent(PlayerActivity.this, SongControlActivity.class);
+            Song song = (Song) getIntent().getSerializableExtra("song");
+            if (song != null) {
+                intent.putExtra("song_title", song.getTitle());
+                intent.putExtra("artist_name", song.getArtist() != null ? song.getArtist().getName() : "Unknown Artist");
+                intent.putExtra("album_art_url", UrlUtils.getImageUrl(song.getCoverImage()));
+            }
+            startActivity(intent);
+        });
 
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
