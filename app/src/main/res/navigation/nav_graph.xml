@@ -53,4 +53,9 @@
             android:id="@+id/navigation_media_type"
             android:name="fit24.duy.musicplayer.fragments.MediaTypeFragment"
             android:label="Media Type" />
+
+        <fragment
+            android:id="@+id/navigation_liked_songs"
+            android:name="fit24.duy.musicplayer.fragments.LikedSongsFragment"
+            android:label="Liked Songs" />
 </navigation>

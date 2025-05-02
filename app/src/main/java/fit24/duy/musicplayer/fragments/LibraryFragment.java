@@ -12,17 +12,20 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import java.util.ArrayList;
 import java.util.List;
 import fit24.duy.musicplayer.R;
-import fit24.duy.musicplayer.adapters.LibraryItemAdapter;
+import fit24.duy.musicplayer.adapters.LibraryAdapter;
 import fit24.duy.musicplayer.api.ApiClient;
 import fit24.duy.musicplayer.api.ApiService;
 import fit24.duy.musicplayer.models.Album;
 import fit24.duy.musicplayer.models.Artist;
+import fit24.duy.musicplayer.models.Song;
 import fit24.duy.musicplayer.utils.SessionManager;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -30,7 +33,7 @@ import retrofit2.Response;
 
 public class LibraryFragment extends Fragment {
     private RecyclerView recentlyPlayedRecyclerView;
-    private LibraryItemAdapter recentlyPlayedAdapter;
+    private LibraryAdapter recentlyPlayedAdapter;
     private ApiService apiService;
     private Long userId;
 
@@ -97,12 +100,36 @@ public class LibraryFragment extends Fragment {
         TextView likedSongsDescription = view.findViewById(R.id.liked_songs_description);
 
         likedSongsTitle.setText("Liked Songs");
-        likedSongsDescription.setText("\uD83D\uDCCC Playlist • 58 songs");
+        // Tạm thời để placeholder, sẽ cập nhật sau khi gọi API
+        likedSongsDescription.setText("\uD83D\uDCCC Playlist • 0 songs");
         Glide.with(this)
                 .load(R.drawable.liked_songs)
                 .into(likedSongsImage);
 
-        likedSongsLayout.setOnClickListener(v -> Toast.makeText(getContext(), "Liked Songs - Chưa triển khai", Toast.LENGTH_SHORT).show());
+        // Gọi API để lấy số lượng bài hát đã like và cập nhật description
+        Call<List<Song>> likedSongsCall = apiService.getLikedSongs(userId);
+        likedSongsCall.enqueue(new Callback<List<Song>>() {
+            @Override
+            public void onResponse(Call<List<Song>> call, Response<List<Song>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    int songCount = response.body().size();
+                    likedSongsDescription.setText("\uD83D\uDCCC Playlist • " + songCount + " songs");
+                } else {
+                    Toast.makeText(getContext(), "Không thể tải số bài hát đã thích", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<Song>> call, Throwable t) {
+                Toast.makeText(getContext(), "Lỗi: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        // Khi nhấn vào Liked Songs, chuyển sang LikedSongsFragment
+        likedSongsLayout.setOnClickListener(v -> {
+            NavController navController = Navigation.findNavController(v);
+            navController.navigate(R.id.navigation_liked_songs);
+        });
 
         // Thiết lập New Episodes
         ImageView newEpisodesImage = view.findViewById(R.id.new_episodes_image);
@@ -120,7 +147,7 @@ public class LibraryFragment extends Fragment {
         // Thiết lập RecyclerView
         recentlyPlayedRecyclerView = view.findViewById(R.id.recently_played_recycler_view);
         recentlyPlayedRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        recentlyPlayedAdapter = new LibraryItemAdapter(getContext(), new ArrayList<>());
+        recentlyPlayedAdapter = new LibraryAdapter(getContext(), new ArrayList<>());
         recentlyPlayedRecyclerView.setAdapter(recentlyPlayedAdapter);
 
         // Tải dữ liệu Artists và Albums
@@ -143,7 +170,7 @@ public class LibraryFragment extends Fragment {
                         public void onResponse(Call<List<Album>> call, Response<List<Album>> response) {
                             if (response.isSuccessful() && response.body() != null) {
                                 allItems.addAll(response.body());
-                                recentlyPlayedAdapter = new LibraryItemAdapter(getContext(), allItems);
+                                recentlyPlayedAdapter = new LibraryAdapter(getContext(), allItems);
                                 recentlyPlayedRecyclerView.setAdapter(recentlyPlayedAdapter);
                             } else {
                                 Toast.makeText(getContext(), "Không thể tải danh sách album", Toast.LENGTH_SHORT).show();
@@ -192,7 +219,7 @@ public class LibraryFragment extends Fragment {
                 artistItems.add(item);
             }
         }
-        recentlyPlayedAdapter = new LibraryItemAdapter(getContext(), artistItems);
+        recentlyPlayedAdapter = new LibraryAdapter(getContext(), artistItems);
         recentlyPlayedRecyclerView.setAdapter(recentlyPlayedAdapter);
     }
 
@@ -212,7 +239,7 @@ public class LibraryFragment extends Fragment {
                 albumItems.add(item);
             }
         }
-        recentlyPlayedAdapter = new LibraryItemAdapter(getContext(), albumItems);
+        recentlyPlayedAdapter = new LibraryAdapter(getContext(), albumItems);
         recentlyPlayedRecyclerView.setAdapter(recentlyPlayedAdapter);
     }
 
@@ -225,7 +252,7 @@ public class LibraryFragment extends Fragment {
         recentlyPlayedRecyclerView.setVisibility(View.VISIBLE);
 
         // Hiển thị lại toàn bộ danh sách Artists và Albums
-        recentlyPlayedAdapter = new LibraryItemAdapter(getContext(), allItems);
+        recentlyPlayedAdapter = new LibraryAdapter(getContext(), allItems);
         recentlyPlayedRecyclerView.setAdapter(recentlyPlayedAdapter);
     }
 }
