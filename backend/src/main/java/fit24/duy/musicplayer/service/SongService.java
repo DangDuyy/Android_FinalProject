@@ -25,4 +25,6 @@ public interface SongService {
     List<Song> getSongsByAlbum(Long albumId);
 
     List<MediaTypeResponse> getSongsByMediaType(Long mediaTypeId);
+
+    List<Song> getRandomSongs(int count);
 }

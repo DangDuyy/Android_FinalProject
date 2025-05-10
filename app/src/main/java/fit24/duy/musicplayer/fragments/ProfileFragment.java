@@ -3,9 +3,11 @@ package fit24.duy.musicplayer.fragments;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -20,7 +22,7 @@ public class ProfileFragment extends Fragment {
     private TextView emailText;
     private TextView totalSongsText;
     private TextView totalPlaylistsText;
-    private ImageButton logoutButton;
+    private ImageButton menuButton;
 
     @Nullable
     @Override
@@ -32,7 +34,7 @@ public class ProfileFragment extends Fragment {
         emailText = view.findViewById(R.id.email_text);
         totalSongsText = view.findViewById(R.id.total_songs_text);
         totalPlaylistsText = view.findViewById(R.id.total_playlists_text);
-        logoutButton = view.findViewById(R.id.logout_button);
+        menuButton = view.findViewById(R.id.menu_button);
 
         // Load user data from SharedPreferences
         SharedPreferences prefs = requireActivity().getSharedPreferences("UserPrefs", requireActivity().MODE_PRIVATE);
@@ -45,13 +47,27 @@ public class ProfileFragment extends Fragment {
         totalSongsText.setText("0");
         totalPlaylistsText.setText("0");
 
-        // Set logout button click listener
-        logoutButton.setOnClickListener(v -> {
-            if (getActivity() instanceof MainActivity) {
-                ((MainActivity) getActivity()).logout();
-            }
-        });
+        // Set menu button click listener
+        menuButton.setOnClickListener(v -> showPopupMenu(v));
 
         return view;
+    }
+
+    private void showPopupMenu(View view) {
+        PopupMenu popup = new PopupMenu(requireContext(), view);
+        popup.getMenuInflater().inflate(R.menu.profile_menu, popup.getMenu());
+
+        popup.setOnMenuItemClickListener(item -> {
+            int itemId = item.getItemId();
+            if (itemId == R.id.menu_logout) {
+                if (getActivity() instanceof MainActivity) {
+                    ((MainActivity) getActivity()).logout();
+                }
+                return true;
+            }
+            return false;
+        });
+
+        popup.show();
     }
 }

@@ -22,6 +22,7 @@ import fit24.duy.musicplayer.R;
 import fit24.duy.musicplayer.api.ApiClient;
 import fit24.duy.musicplayer.api.ApiService;
 import fit24.duy.musicplayer.models.ApiResponse;
+import fit24.duy.musicplayer.utils.UrlUtils;
 import retrofit2.Call;
 import retrofit2.Callback;
 
@@ -63,8 +64,9 @@ public class ArtistControlFragment extends Fragment {
             ImageView artistImageControl = view.findViewById(R.id.artist_image_control);
 
             artistNameControl.setText(artistName);
+            String imageUrl = UrlUtils.getImageUrl(artistImage);
             Glide.with(requireContext())
-                    .load("http://10.0.2.2:8080/uploads/" + artistImage + "?t=" + System.currentTimeMillis())
+                    .load(imageUrl)
                     .placeholder(R.drawable.default_avatar)
                     .error(R.drawable.default_avatar)
                     .circleCrop()

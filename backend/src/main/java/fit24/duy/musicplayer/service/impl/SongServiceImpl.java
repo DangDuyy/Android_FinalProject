@@ -13,6 +13,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -29,6 +30,20 @@ public class SongServiceImpl implements SongService {
     @Autowired
     private UserRepository userRepository;
 
+    private Song convertContentToSong(fit24.duy.musicplayer.entity.Content content) {
+        fit24.duy.musicplayer.entity.Song song = new fit24.duy.musicplayer.entity.Song();
+        song.setId(content.getId());
+        song.setTitle(content.getTitle());
+        song.setCoverImage(content.getCoverImage());
+        song.setFilePath(content.getFilePath());
+        song.setArtist(content.getArtist());
+        song.setAlbum(content.getAlbum());
+        song.setMediaType(content.getMediaType());
+        song.setPlayCount(content.getPlayCount());
+        // Nếu có các trường khác cần thiết, set thêm ở đây
+        return song;
+    }
+
     @Override
     public List<Song> getRecentlyPlayedSongs() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -39,8 +54,10 @@ public class SongServiceImpl implements SongService {
                 List<PlayHistory> recentHistory = playHistoryRepository.findTop5ByUserOrderByPlayedAtDesc(user);
                 return recentHistory.stream()
                         .map(PlayHistory::getContent)
-                        .filter(Song.class::isInstance) // More type-safe filtering
-                        .map(Song.class::cast)         // Safe casting after filtering
+                        .filter(content -> content != null && content.getMediaType() != null &&
+                                content.getMediaType().getName().equalsIgnoreCase("song"))
+                        .map(this::convertContentToSong)
+                        .filter(song -> song.getFilePath() != null && !song.getFilePath().isEmpty())
                         .collect(Collectors.toList());
             }
         }
@@ -114,6 +131,13 @@ public class SongServiceImpl implements SongService {
                         song.getPlayCount()
                 ))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Song> getRandomSongs(int count) {
+        List<Song> allSongs = songRepository.findAll();
+        Collections.shuffle(allSongs);
+        return allSongs.stream().limit(count).collect(Collectors.toList());
     }
 
 }

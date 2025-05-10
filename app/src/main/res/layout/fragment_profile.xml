@@ -10,7 +10,7 @@
         android:orientation="vertical"
         android:gravity="center_horizontal">
 
-        <!-- Header with Logout Button -->
+        <!-- Header with Menu Button -->
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -27,14 +27,15 @@
                 android:layout_centerVertical="true"/>
 
             <ImageButton
-                android:id="@+id/logout_button"
+                android:id="@+id/menu_button"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
-                android:src="@drawable/ic_logout"
+                android:src="@drawable/ic_more_vert"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
-                android:contentDescription="Logout"/>
+                android:contentDescription="Menu"/>
+
         </RelativeLayout>
 
         <!-- Profile Content -->

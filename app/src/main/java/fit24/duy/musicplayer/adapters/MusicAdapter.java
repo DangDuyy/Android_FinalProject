@@ -140,4 +140,8 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.MusicViewHol
             }
         }
     }
+
+    public List<Song> getSongs() {
+        return songs;
+    }
 }

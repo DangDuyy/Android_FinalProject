@@ -103,6 +103,30 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginEnd="24dp"/>
 
+    <!-- Lyrics Button -->
+    <ImageButton
+        android:id="@+id/btn_lyrics"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:background="@android:color/transparent"
+        android:src="@drawable/ic_lyrics"
+        android:tint="#fff"
+        app:layout_constraintTop_toTopOf="@id/tv_artist"
+        app:layout_constraintEnd_toStartOf="@id/btn_like"
+        android:layout_marginEnd="16dp"/>
+
+    <!-- Queue Button -->
+    <ImageButton
+        android:id="@+id/queue_button"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:background="@android:color/transparent"
+        android:src="@drawable/ic_queue_music"
+        android:tint="#fff"
+        app:layout_constraintTop_toTopOf="@id/tv_artist"
+        app:layout_constraintEnd_toStartOf="@id/btn_lyrics"
+        android:layout_marginEnd="16dp"/>
+
     <!-- SeekBar -->
     <SeekBar
         android:id="@+id/seekBar"
@@ -200,19 +224,6 @@
             android:tint="#fff"/>
     </LinearLayout>
 
-    <!-- Lyrics Button (Optional) -->
-    <Button
-        android:id="@+id/btn_lyrics"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Lyrics"
-        android:backgroundTint="#ff9800"
-        android:textColor="#fff"
-        app:layout_constraintTop_toBottomOf="@id/layout_controls"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="24dp"/>
-
     <fit24.duy.musicplayer.visualizer.MusicVisualizerView
         android:id="@+id/visualizer"
         android:layout_width="0dp"
@@ -220,7 +231,7 @@
         android:layout_marginTop="16dp"
         android:layout_marginStart="32dp"
         android:layout_marginEnd="32dp"
-        app:layout_constraintTop_toBottomOf="@id/btn_lyrics"
+        app:layout_constraintTop_toBottomOf="@id/layout_controls"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 

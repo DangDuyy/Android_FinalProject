@@ -18,6 +18,7 @@ import java.util.List;
 
 import fit24.duy.musicplayer.R;
 import fit24.duy.musicplayer.models.Song;
+import fit24.duy.musicplayer.utils.UrlUtils;
 
 public class ArtistAdapter extends RecyclerView.Adapter<ArtistAdapter.SongViewHolder> {
     private Context context;
@@ -62,9 +63,12 @@ public class ArtistAdapter extends RecyclerView.Adapter<ArtistAdapter.SongViewHo
             songTitle.setText(song.getTitle());
             songArtist.setText(song.getArtist().getName());
 
+            String imageUrl = UrlUtils.getImageUrl(song.getCoverImage());
             Glide.with(context)
-                    .load("http://10.0.2.2:8080/uploads/" + song.getCoverImage() + "?t=" + System.currentTimeMillis())
+                    .load(imageUrl)
                     .placeholder(R.drawable.album_placeholder)
+                    .error(R.drawable.album_placeholder)
+                    .centerCrop()
                     .into(songImage);
 
             moreButton.setOnClickListener(v -> {

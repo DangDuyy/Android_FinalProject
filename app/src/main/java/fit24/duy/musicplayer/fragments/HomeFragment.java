@@ -1,5 +1,6 @@
 package fit24.duy.musicplayer.fragments;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -13,7 +14,11 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.constraintlayout.widget.ConstraintLayout;
+
 import fit24.duy.musicplayer.R;
+import fit24.duy.musicplayer.activities.MainActivity;
+import fit24.duy.musicplayer.activities.PlayerActivity;
 import fit24.duy.musicplayer.adapters.MusicAdapter;
 import fit24.duy.musicplayer.adapters.PlayerBar;
 import fit24.duy.musicplayer.api.ApiClient;
@@ -38,6 +43,7 @@ public class HomeFragment extends Fragment {
     private ProgressBar recommendedProgress;
     private TextView recentlyPlayedEmpty;
     private TextView recommendedEmpty;
+    private ConstraintLayout playerBarLayout;
 
     @Nullable
     @Override
@@ -53,9 +59,6 @@ public class HomeFragment extends Fragment {
         recommendedProgress = view.findViewById(R.id.recommended_progress);
         recentlyPlayedEmpty = view.findViewById(R.id.recently_played_empty);
         recommendedEmpty = view.findViewById(R.id.recommended_empty);
-
-        // Get reference to PlayerBar from activity
-        playerBar = requireActivity().findViewById(R.id.playerBar);
 
         // Set up layouts
         LinearLayoutManager recentlyPlayedLayoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
@@ -91,17 +94,52 @@ public class HomeFragment extends Fragment {
         return view;
     }
 
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        
+        // Get reference to PlayerBar from activity
+        View playerBarView = requireActivity().findViewById(R.id.playerBar);
+        playerBar = new PlayerBar(playerBarView, fit24.duy.musicplayer.utils.QueueManager.getInstance(requireContext()));
+        playerBarLayout = (ConstraintLayout) playerBarView;
+        
+        // Set click listener for the entire player bar to open PlayerActivity
+        playerBarLayout.setOnClickListener(v -> {
+            if (playerBar.getCurrentSong() != null) {
+                Intent intent = new Intent(getActivity(), PlayerActivity.class);
+                intent.putExtra("song", playerBar.getCurrentSong());
+                startActivity(intent);
+            }
+        });
+    }
+
     private void onSongSelected(Song song) {
         if (playerBar != null && song != null) {
-            String artistName = song.getArtist() != null ? song.getArtist().getName() : getString(R.string.unknown_artist);
-            playerBar.setSongInfo(
-                    song.getTitle(),
-                    artistName,
-                    song.getCoverImage(),
-                    song.getAudioUrl(),
-                    song
-            );
-            playerBar.setPlaying(true);
+            // Lấy danh sách hiện tại của adapter (có thể là recentlyPlayed hoặc recommended)
+            List<Song> currentQueue;
+            int index;
+            if (recentlyPlayedAdapter != null && recentlyPlayedAdapter.getSongs().contains(song)) {
+                currentQueue = recentlyPlayedAdapter.getSongs();
+                index = currentQueue.indexOf(song);
+            } else if (recommendedAdapter != null && recommendedAdapter.getSongs().contains(song)) {
+                currentQueue = recommendedAdapter.getSongs();
+                index = currentQueue.indexOf(song);
+            } else {
+                currentQueue = new ArrayList<>();
+                index = -1;
+            }
+            if (index != -1) {
+                fit24.duy.musicplayer.utils.QueueManager queueManager = fit24.duy.musicplayer.utils.QueueManager.getInstance(requireContext());
+                queueManager.setQueue(currentQueue);
+                queueManager.setCurrentIndex(index);
+                queueManager.play();
+            }
+            playerBarLayout.setVisibility(View.VISIBLE);
+            playerBar.setSongInfo(song);
+            playerBar.togglePlayPause(true);
+            // Mở PlayerActivity (không cần truyền song qua Intent)
+            Intent intent = new Intent(getActivity(), PlayerActivity.class);
+            startActivity(intent);
         }
     }
 

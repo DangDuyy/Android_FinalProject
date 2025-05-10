@@ -1,6 +1,7 @@
 package fit24.duy.musicplayer.models;
 
 import java.io.Serializable;
+import android.util.Log;
 
 public class Song implements Serializable {
     private Long id;
@@ -15,7 +16,18 @@ public class Song implements Serializable {
     private String lyrics;
     private int albumArt;
     private String filePath;
+    private String path;
+    private String thumbnail;
     private static final String BASE_URL = "http://10.0.2.2:8080/"; // URL của server của bạn
+    private static final String TAG = "Song";
+
+    public Song(long id, String title, String artist, String path) {
+        this.id = id;
+        this.title = title;
+        this.artist = new Artist(artist, "", ""); // Tạo một Artist object với tên nghệ sĩ và các thông tin khác
+        this.path = path;
+        this.thumbnail = path; // Sử dụng path làm thumbnail tạm thời
+    }
 
     public Long getId() {
         return id;
@@ -39,6 +51,10 @@ public class Song implements Serializable {
 
     public void setArtist(Artist artist) {
         this.artist = artist;
+    }
+
+    public String getArtistName() {
+        return artist != null ? artist.getName() : "";
     }
 
     public int getAlbumArt() {
@@ -65,6 +81,14 @@ public class Song implements Serializable {
         this.filePath = filePath;
     }
 
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
+    }
+
     public String getCoverImage() {
         return coverImage;
     }
@@ -74,11 +98,39 @@ public class Song implements Serializable {
     }
 
     public String getAudioUrl() {
+        Log.d(TAG, "Getting audio URL for song: " + title);
+        Log.d(TAG, "audioUrl: " + audioUrl);
+        Log.d(TAG, "filePath: " + filePath);
+        Log.d(TAG, "path: " + path);
+
         if (audioUrl != null && !audioUrl.isEmpty()) {
+            Log.d(TAG, "Using audioUrl: " + audioUrl);
             return audioUrl;
         }
         // Nếu không có audioUrl, sử dụng filePath
-        return filePath != null ? BASE_URL + "uploads/" + filePath : null;
+        if (filePath != null && !filePath.isEmpty()) {
+            // Nếu là URL đầy đủ
+            if (filePath.toLowerCase().startsWith("http://") || filePath.toLowerCase().startsWith("https://")) {
+                Log.d(TAG, "Using filePath as full URL: " + filePath);
+                return filePath;
+            }
+            // Nếu là tên file trong uploads
+            String url = BASE_URL + "uploads/" + filePath;
+            Log.d(TAG, "Using filePath with BASE_URL: " + url);
+            return url;
+        }
+        // Nếu không có cả hai, thử dùng path
+        if (path != null && !path.isEmpty()) {
+            if (path.toLowerCase().startsWith("http://") || path.toLowerCase().startsWith("https://")) {
+                Log.d(TAG, "Using path as full URL: " + path);
+                return path;
+            }
+            String url = BASE_URL + "uploads/" + path;
+            Log.d(TAG, "Using path with BASE_URL: " + url);
+            return url;
+        }
+        Log.e(TAG, "No valid audio URL found for song: " + title);
+        return null;
     }
 
     public void setAudioUrl(String audioUrl) {
@@ -115,5 +167,13 @@ public class Song implements Serializable {
 
     public void setPlayCount(int playCount) {
         this.playCount = playCount;
+    }
+
+    public String getThumbnail() {
+        return thumbnail;
+    }
+
+    public void setThumbnail(String thumbnail) {
+        this.thumbnail = thumbnail;
     }
 }

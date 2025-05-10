@@ -99,4 +99,10 @@ public interface ApiService {
     @GET("songs/search")
     Call<List<Song>> searchSongs(@Query("title") String title);
 
+    @GET("/api/songs/random")
+    Call<List<Song>> getRandomSongs(@Query("count") int count);
+
+    @GET("/api/{id}/lyrics")
+    Call<String> getLyrics(@Path("id") Long id);
+
 }

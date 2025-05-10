@@ -1,9 +1,13 @@
 package fit24.duy.musicplayer.activities;
 
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.util.Log;
+import android.view.View;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -17,6 +21,8 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import fit24.duy.musicplayer.R;
 import fit24.duy.musicplayer.adapters.PlayerBar;
 import fit24.duy.musicplayer.models.Song;
+import fit24.duy.musicplayer.service.MusicPlayerService;
+import fit24.duy.musicplayer.utils.QueueManager;
 import fit24.duy.musicplayer.utils.SessionManager;
 
 public class MainActivity extends AppCompatActivity {
@@ -27,6 +33,21 @@ public class MainActivity extends AppCompatActivity {
     private MediaPlayer mediaPlayer;
     private boolean isPlaying = false;
     private SessionManager sessionManager;
+    private MusicPlayerService musicService;
+    private boolean isServiceBound = false;
+
+    private ServiceConnection serviceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            MusicPlayerService.LocalBinder binder = (MusicPlayerService.LocalBinder) service;
+            musicService = binder.getService();
+            isServiceBound = true;
+        }
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            isServiceBound = false;
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,6 +62,12 @@ public class MainActivity extends AppCompatActivity {
             startActivity(new Intent(this, WelcomeActivity.class));
             finish();
             return;
+        }
+
+        // Fill queue with random songs from backend if empty
+        QueueManager queueManager = QueueManager.getInstance(this);
+        if (queueManager.getQueue().isEmpty()) {
+            queueManager.fillQueueWithRandomSongsFromApi(10);
         }
 
         // Setup toolbar
@@ -64,14 +91,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // Set listener for play/pause button
-        playerBar.setOnPlayPauseClickListener(isPlaying -> {
-            if (isPlaying) {
-                playMusic();
-            } else {
-                pauseMusic();
-            }
-        });
+        Intent serviceIntent = new Intent(this, MusicPlayerService.class);
+        bindService(serviceIntent, serviceConnection, BIND_AUTO_CREATE);
     }
 
     public void logout() {
@@ -98,7 +119,58 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupPlayerBar() {
-        playerBar = new PlayerBar(this);
+        View playerBarView = findViewById(R.id.playerBar);
+        QueueManager queueManager = QueueManager.getInstance(this);
+        playerBar = new PlayerBar(playerBarView, queueManager);
+        playerBarView.setVisibility(View.GONE); // Ẩn playerBar ban đầu
+        
+        playerBarView.setOnClickListener(v -> {
+            if (playerBar.getCurrentSong() != null) {
+                Intent intent = new Intent(this, PlayerActivity.class);
+                intent.putExtra("song", playerBar.getCurrentSong());
+                startActivity(intent);
+            }
+        });
+
+        playerBar.setPlayPauseClickListener(new PlayerBar.OnPlayPauseClickListener() {
+            @Override
+            public void onPlayPauseClick() {
+                if (isPlaying) {
+                    queueManager.pause();
+                    isPlaying = false;
+                } else {
+                    queueManager.play();
+                    isPlaying = true;
+                }
+                playerBar.togglePlayPause(isPlaying);
+            }
+
+            @Override
+            public void onPlayNext() {
+                queueManager.playNext();
+                isPlaying = true;
+                playerBar.togglePlayPause(true);
+            }
+
+            @Override
+            public void onPlayPrevious() {
+                queueManager.playPrevious();
+                isPlaying = true;
+                playerBar.togglePlayPause(true);
+            }
+
+            @Override
+            public void onQueueSongSelected(Song song) {
+                int index = queueManager.getQueue().indexOf(song);
+                if (index != -1) {
+                    queueManager.setCurrentIndex(index);
+                    queueManager.play();
+                    isPlaying = true;
+                    playerBar.togglePlayPause(true);
+                    playerBar.setSongInfo(song);
+                }
+            }
+        });
     }
 
     @Override
@@ -110,65 +182,61 @@ public class MainActivity extends AppCompatActivity {
     public void onSongSelected(Song song) {
         if (song != null && song.getAudioUrl() != null) {
             Log.d(TAG, "Selected song: " + song.getTitle() + ", URL: " + song.getAudioUrl());
-            playerBar.setSongInfo(
-                    song.getTitle(),
-                    song.getArtist() != null ? song.getArtist().getName() : "",
-                    song.getCoverImage(),
-                    song.getAudioUrl(),
-                    song
-            );
-            playerBar.setPlaying(true);
-            playMusic();
-        } else {
-            Log.e(TAG, "Invalid song or audio URL");
-        }
-    }
-
-    private void playMusic() {
-        if (playerBar.getCurrentSong() == null || playerBar.getCurrentSong().getAudioUrl() == null) {
-            Log.e(TAG, "No song selected or invalid audio URL");
-            return;
-        }
-
-        String audioUrl = playerBar.getCurrentSong().getAudioUrl();
-        Log.d(TAG, "Playing music from URL: " + audioUrl);
-
-        if (mediaPlayer == null) {
-            mediaPlayer = new MediaPlayer();
-            try {
-                mediaPlayer.setDataSource(audioUrl);
-                mediaPlayer.setOnPreparedListener(mp -> {
-                    mp.start();
-                    isPlaying = true;
-                    Log.d(TAG, "MediaPlayer started successfully");
-                });
-                mediaPlayer.setOnErrorListener((mp, what, extra) -> {
-                    Log.e(TAG, "MediaPlayer error: what=" + what + ", extra=" + extra);
-                    return false;
-                });
-                mediaPlayer.prepareAsync();
-            } catch (Exception e) {
-                Log.e(TAG, "Error preparing MediaPlayer", e);
-                e.printStackTrace();
+            View playerBarView = findViewById(R.id.playerBar);
+            if (playerBarView != null) {
+                playerBarView.setVisibility(View.VISIBLE);
+                Log.d(TAG, "Adding song to queue: " + song.getTitle());
+                playerBar.addToQueue(song);
+                playerBar.setSongInfo(song);
+                playerBar.togglePlayPause(false); // Start with play button
+                playSong(song); // Sử dụng service
+            } else {
+                Log.e(TAG, "PlayerBar view not found");
             }
-        } else if (!isPlaying) {
-            mediaPlayer.start();
-            isPlaying = true;
-            Log.d(TAG, "Resumed playback");
+        } else {
+            Log.e(TAG, "Invalid song or audio URL. Song: " + (song != null ? song.getTitle() : "null") + ", URL: " + (song != null ? song.getAudioUrl() : "null"));
         }
     }
 
-    private void pauseMusic() {
-        if (mediaPlayer != null && isPlaying) {
-            mediaPlayer.pause();
+    public void playSong(Song song) {
+        if (isServiceBound && musicService != null && song != null && song.getAudioUrl() != null) {
+            musicService.play(song.getAudioUrl());
+            isPlaying = true;
+            playerBar.togglePlayPause(true);
+        }
+    }
+
+    public void pauseMusic() {
+        if (isServiceBound && musicService != null) {
+            musicService.pause();
             isPlaying = false;
-            Log.d(TAG, "Playback paused");
+            playerBar.togglePlayPause(false);
+        }
+    }
+
+    public void resumeMusic() {
+        if (isServiceBound && musicService != null) {
+            musicService.resume();
+            isPlaying = true;
+            playerBar.togglePlayPause(true);
+        }
+    }
+
+    public void stopMusic() {
+        if (isServiceBound && musicService != null) {
+            musicService.stop();
+            isPlaying = false;
+            playerBar.togglePlayPause(false);
         }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (isServiceBound) {
+            unbindService(serviceConnection);
+            isServiceBound = false;
+        }
         if (mediaPlayer != null) {
             mediaPlayer.release();
             mediaPlayer = null;

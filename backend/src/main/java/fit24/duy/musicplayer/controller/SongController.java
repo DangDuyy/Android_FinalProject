@@ -168,5 +168,10 @@ public class SongController {
         return ResponseEntity.ok(lyricsDTO);
     }
 
+    @GetMapping("/random")
+    public List<Song> getRandomSongs(@RequestParam(defaultValue = "10") int count) {
+        return songService.getRandomSongs(count);
+    }
+
     // Add other song-related endpoints as needed
 }

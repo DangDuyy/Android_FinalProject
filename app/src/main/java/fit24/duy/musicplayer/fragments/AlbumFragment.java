@@ -28,6 +28,7 @@ import fit24.duy.musicplayer.api.ApiClient;
 import fit24.duy.musicplayer.api.ApiService;
 import fit24.duy.musicplayer.models.ApiResponse;
 import fit24.duy.musicplayer.models.Song;
+import fit24.duy.musicplayer.utils.UrlUtils;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -119,8 +120,9 @@ public class AlbumFragment extends Fragment {
             TextView nameView = view.findViewById(R.id.album_name);
             ImageView imageView = view.findViewById(R.id.album_image);
             nameView.setText(albumTitle);
+            String imageUrl = UrlUtils.getImageUrl(albumImage);
             Glide.with(requireContext())
-                    .load("http://10.0.2.2:8080/uploads/" + albumImage + "?t=" + System.currentTimeMillis())
+                    .load(imageUrl)
                     .placeholder(R.drawable.album_placeholder)
                     .into(imageView);
 

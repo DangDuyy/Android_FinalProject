@@ -2,8 +2,6 @@ package fit24.duy.musicplayer.activities;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
-import android.media.AudioAttributes;
-import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -29,6 +27,7 @@ import fit24.duy.musicplayer.utils.LyricsManager;
 import fit24.duy.musicplayer.utils.UrlUtils;
 import fit24.duy.musicplayer.visualizer.MusicVisualizerView;
 import fit24.duy.musicplayer.visualizer.VisualizerService;
+import fit24.duy.musicplayer.utils.QueueManager;
 
 import java.io.InputStream;
 import java.util.concurrent.TimeUnit;
@@ -37,13 +36,15 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URL;
 import org.json.JSONObject;
+import java.io.IOException;
+import android.media.MediaPlayer;
 
 public class PlayerActivity extends AppCompatActivity implements EditLyricsDialog.EditLyricsListener {
     private static final String TAG = "PlayerActivity";
     private static final int PERMISSION_REQUEST_CODE = 123;
     
-    private MediaPlayer mediaPlayer;
     private ImageButton btnPlayPause, btnNext, btnPrev, btnShuffle, btnRepeat;
+    private ImageButton btnLyrics;
     private SeekBar seekBar;
     private TextView tvCurrentTime, tvDuration;
     private ImageView imgAlbumArt;
@@ -54,6 +55,7 @@ public class PlayerActivity extends AppCompatActivity implements EditLyricsDialo
     private boolean isPlaying = false;
     private LyricsManager lyricsManager;
     private boolean isRepeat = false;
+    private QueueManager queueManager;
 
     // Visualizer variables
     private MusicVisualizerView visualizerView;
@@ -67,18 +69,24 @@ public class PlayerActivity extends AppCompatActivity implements EditLyricsDialo
         android.graphics.Color.parseColor("#FFEEAD")
     };
     private int currentColorIndex = 0;
+    
+    private Runnable updateSeekBarRunnable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_player);
 
+        // Initialize QueueManager
+        queueManager = QueueManager.getInstance(this);
+        queueManager.setPlaybackStateListener(isPlaying -> {
+            this.isPlaying = isPlaying;
+            updatePlayPauseButton();
+        });
+
         // Initialize views
         initializeViews();
         
-        // Setup MediaPlayer
-        setupMediaPlayer();
-
         // Setup button click listeners
         setupClickListeners();
 
@@ -88,6 +96,9 @@ public class PlayerActivity extends AppCompatActivity implements EditLyricsDialo
         } else {
             requestPermission();
         }
+
+        // Luôn cập nhật SeekBar khi phát bài mới
+        updateSongInfoAndSeekBar();
     }
 
     private void initializeViews() {
@@ -96,6 +107,7 @@ public class PlayerActivity extends AppCompatActivity implements EditLyricsDialo
         btnPrev = findViewById(R.id.btn_prev);
         btnShuffle = findViewById(R.id.btn_shuffle);
         btnRepeat = findViewById(R.id.btn_repeat);
+        btnLyrics = findViewById(R.id.btn_lyrics);
         seekBar = findViewById(R.id.seekBar);
         tvCurrentTime = findViewById(R.id.tv_current_time);
         tvDuration = findViewById(R.id.tv_duration);
@@ -107,158 +119,38 @@ public class PlayerActivity extends AppCompatActivity implements EditLyricsDialo
         editLyricsButton = findViewById(R.id.editLyricsButton);
         visualizerView = findViewById(R.id.visualizer);
 
-        // Get data from Intent
-        Song song = (Song) getIntent().getSerializableExtra("song");
-        if (song != null) {
-            tvSongTitle.setText(song.getTitle());
-            tvArtist.setText(song.getArtist() != null ? song.getArtist().getName() : "Unknown Artist");
-            
-            // Load image using Glide with UrlUtils
-            String imageUrl = UrlUtils.getImageUrl(song.getCoverImage());
-            Glide.with(this)
-                .load(imageUrl)
-                .centerCrop()
-                .into(imgAlbumArt);
-        }
-    }
-
-    private void setupMediaPlayer() {
-        Song song = (Song) getIntent().getSerializableExtra("song");
-        if (song == null) {
-            Log.e(TAG, "No song data provided");
-            finish();
-            return;
-        }
-
-        String audioUrl = UrlUtils.getAudioUrl(song.getFilePath());
-        Log.d(TAG, "Setting up MediaPlayer with URL: " + audioUrl);
-
-        try {
-            if (mediaPlayer != null) {
-                mediaPlayer.release();
+        // Set up lyrics toggle button
+        btnLyrics.setOnClickListener(v -> {
+            if (lyricsManager != null) {
+                lyricsManager.toggleVisibility();
+                btnLyrics.setAlpha(lyricsManager.isVisible() ? 1.0f : 0.5f);
             }
-            mediaPlayer = new MediaPlayer();
-            
-            // Set audio attributes for proper audio focus handling
-            mediaPlayer.setAudioAttributes(
-                new AudioAttributes.Builder()
-                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                    .setUsage(AudioAttributes.USAGE_MEDIA)
-                    .build()
-            );
-
-            // Add OnBufferingUpdateListener to track loading progress
-            mediaPlayer.setOnBufferingUpdateListener((mp, percent) -> {
-                Log.d(TAG, "Buffer update: " + percent + "%");
-            });
-
-            mediaPlayer.setDataSource(audioUrl);
-            
-            // Show loading indicator
-            // TODO: Add a loading indicator in your layout
-            Log.d(TAG, "Starting media preparation...");
-            
-            mediaPlayer.setOnPreparedListener(mp -> {
-                try {
-                    int duration = mp.getDuration();
-                    Log.d(TAG, "Media duration from file: " + duration + "ms");
-                    
-                    if (duration > 0) {
-                        tvDuration.setText(formatTime(duration));
-                        seekBar.setMax(duration);
-                        
-                        // Hide loading indicator here
-                        mp.start();
-                        isPlaying = true;
-                        updatePlayPauseButton();
-                        startProgressUpdates();
-                        
-                        // Initialize LyricsManager after MediaPlayer is prepared
-                        lyricsManager = new LyricsManager(mediaPlayer, currentLyricText, nextLyricText);
-                        
-                        // Fetch lyrics if available
-                        if (song.getId() != null) {
-                            fetchLyricsFromDatabase(song.getId().toString());
-                        }
-                        
-                        // Initialize visualizer after MediaPlayer is prepared
-                        if (checkPermission()) {
-                            initializeVisualizer();
-                        }
-                        
-                        Log.d(TAG, "MediaPlayer started successfully");
-                    } else {
-                        Log.e(TAG, "Invalid duration received from media file");
-                        Toast.makeText(PlayerActivity.this, "Error: Could not determine media duration", Toast.LENGTH_SHORT).show();
-                    }
-                } catch (Exception e) {
-                    Log.e(TAG, "Error in onPrepared", e);
-                    Toast.makeText(PlayerActivity.this, "Error starting playback: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                }
-            });
-
-            mediaPlayer.setOnCompletionListener(mp -> {
-                if (isRepeat) {
-                    mp.seekTo(0);
-                    mp.start();
-                } else {
-                    isPlaying = false;
-                    updatePlayPauseButton();
-                }
-            });
-
-            mediaPlayer.setOnErrorListener((mp, what, extra) -> {
-                String errorMessage;
-                switch (what) {
-                    case MediaPlayer.MEDIA_ERROR_IO:
-                        errorMessage = "Network or file system error";
-                        break;
-                    case MediaPlayer.MEDIA_ERROR_TIMED_OUT:
-                        errorMessage = "Connection timeout";
-                        break;
-                    case MediaPlayer.MEDIA_ERROR_UNSUPPORTED:
-                        errorMessage = "Unsupported audio format";
-                        break;
-                    case MediaPlayer.MEDIA_ERROR_MALFORMED:
-                        errorMessage = "Malformed audio data";
-                        break;
-                    default:
-                        errorMessage = "Unknown error (what=" + what + ", extra=" + extra + ")";
-                }
-                Log.e(TAG, "MediaPlayer error: " + errorMessage);
-                Toast.makeText(PlayerActivity.this, "Error playing audio: " + errorMessage, Toast.LENGTH_SHORT).show();
-                return false;
-            });
-
-            // Add OnInfoListener for additional state information
-            mediaPlayer.setOnInfoListener((mp, what, extra) -> {
-                switch (what) {
-                    case MediaPlayer.MEDIA_INFO_BUFFERING_START:
-                        Log.d(TAG, "Buffering started");
-                        // TODO: Show buffering indicator
-                        break;
-                    case MediaPlayer.MEDIA_INFO_BUFFERING_END:
-                        Log.d(TAG, "Buffering ended");
-                        // TODO: Hide buffering indicator
-                        break;
-                }
-                return false;
-            });
-
-            Log.d(TAG, "Starting async preparation...");
-            mediaPlayer.prepareAsync();
-        } catch (Exception e) {
-            Log.e(TAG, "Error preparing MediaPlayer", e);
-            e.printStackTrace();
-            Toast.makeText(this, "Error setting up audio: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-            finish();
-        }
+        });
     }
 
     private void setupClickListeners() {
-        btnPlayPause.setOnClickListener(v -> togglePlayPause());
-        btnNext.setOnClickListener(v -> playNext());
-        btnPrev.setOnClickListener(v -> playPrevious());
+        btnPlayPause.setOnClickListener(v -> {
+            MediaPlayer mediaPlayer = queueManager.getMediaPlayer();
+            if (mediaPlayer.isPlaying()) {
+                queueManager.pause();
+            } else {
+                queueManager.play();
+            }
+            updatePlayPauseButton();
+        });
+        
+        btnNext.setOnClickListener(v -> {
+            queueManager.playNext();
+            updateSongInfoAndSeekBar();
+            updatePlayPauseButton();
+        });
+        
+        btnPrev.setOnClickListener(v -> {
+            queueManager.playPrevious();
+            updateSongInfoAndSeekBar();
+            updatePlayPauseButton();
+        });
+        
         btnShuffle.setOnClickListener(v -> toggleShuffle());
         btnRepeat.setOnClickListener(v -> toggleRepeat());
         editLyricsButton.setOnClickListener(v -> showEditLyricsDialog());
@@ -266,9 +158,12 @@ public class PlayerActivity extends AppCompatActivity implements EditLyricsDialo
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if (fromUser && mediaPlayer != null) {
-                    mediaPlayer.seekTo(progress);
-                    tvCurrentTime.setText(formatTime(progress));
+                if (fromUser) {
+                    MediaPlayer mediaPlayer = queueManager.getMediaPlayer();
+                    if (mediaPlayer != null) {
+                        mediaPlayer.seekTo(progress);
+                        tvCurrentTime.setText(formatTime(progress));
+                    }
                 }
             }
 
@@ -278,80 +173,78 @@ public class PlayerActivity extends AppCompatActivity implements EditLyricsDialo
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {}
         });
-    }
 
-    private void togglePlayPause() {
-        if (mediaPlayer != null) {
-            try {
-                if (isPlaying) {
-                    mediaPlayer.pause();
-                    if (visualizerService != null) {
-                        visualizerService.stopVisualizing();
-                    }
-                    if (lyricsManager != null) {
-                        lyricsManager.stop();
-                    }
-                    Log.d(TAG, "Playback paused");
-                } else {
-                    mediaPlayer.start();
-                    if (visualizerService != null) {
-                        visualizerService.startVisualizing();
-                    }
-                    if (lyricsManager != null) {
-                        lyricsManager.start();
-                    }
-                    Log.d(TAG, "Playback resumed");
-                }
-                isPlaying = !isPlaying;
-                updatePlayPauseButton();
-            } catch (Exception e) {
-                Log.e(TAG, "Error toggling play/pause", e);
-                Toast.makeText(this, "Error controlling playback", Toast.LENGTH_SHORT).show();
-            }
-        }
+        // Make sure the buttons are not covered by other views
+        btnPlayPause.bringToFront();
+        btnNext.bringToFront();
+        btnPrev.bringToFront();
+        btnShuffle.bringToFront();
+        btnRepeat.bringToFront();
     }
 
     private void updatePlayPauseButton() {
+        MediaPlayer mediaPlayer = queueManager.getMediaPlayer();
+        boolean isPlaying = mediaPlayer != null && mediaPlayer.isPlaying();
         btnPlayPause.setImageResource(isPlaying ? R.drawable.ic_pause : R.drawable.ic_play);
+    }
+
+    private void updateSongInfoAndSeekBar() {
+        Song song = queueManager.getCurrentSong();
+        MediaPlayer mediaPlayer = queueManager.getMediaPlayer();
+        if (song != null && mediaPlayer != null) {
+            tvSongTitle.setText(song.getTitle());
+            tvArtist.setText(song.getArtist() != null ? song.getArtist().getName() : "Unknown Artist");
+            String imageUrl = UrlUtils.getImageUrl(song.getCoverImage());
+            Glide.with(this)
+                .load(imageUrl)
+                .centerCrop()
+                .into(imgAlbumArt);
+            // Cập nhật SeekBar
+            seekBar.setMax(mediaPlayer.getDuration());
+            tvDuration.setText(formatTime(mediaPlayer.getDuration()));
+            updateSeekBar();
+        }
+    }
+
+    private void updateSeekBar() {
+        MediaPlayer mediaPlayer = queueManager.getMediaPlayer();
+        if (mediaPlayer == null) return;
+        handler.removeCallbacksAndMessages(null);
+        updateSeekBarRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (mediaPlayer.isPlaying()) {
+                    int currentPosition = mediaPlayer.getCurrentPosition();
+                    seekBar.setProgress(currentPosition);
+                    tvCurrentTime.setText(formatTime(currentPosition));
+                }
+                handler.postDelayed(this, 500);
+            }
+        };
+        handler.post(updateSeekBarRunnable);
     }
 
     private void toggleRepeat() {
         isRepeat = !isRepeat;
+        queueManager.setRepeatMode(isRepeat);
         btnRepeat.setImageResource(isRepeat ? R.drawable.ic_repeat_one : R.drawable.ic_repeat);
     }
 
-    private void playNext() {
-        // TODO: Implement next song logic
-        Toast.makeText(this, "Next song feature coming soon", Toast.LENGTH_SHORT).show();
-    }
-
-    private void playPrevious() {
-        // TODO: Implement previous song logic
-        Toast.makeText(this, "Previous song feature coming soon", Toast.LENGTH_SHORT).show();
+    private void updatePlayerBar(Song song) {
+        try {
+            View playerBarView = findViewById(R.id.playerBar);
+            if (playerBarView != null && playerBarView.getTag() instanceof fit24.duy.musicplayer.adapters.PlayerBar) {
+                fit24.duy.musicplayer.adapters.PlayerBar playerBar = (fit24.duy.musicplayer.adapters.PlayerBar) playerBarView.getTag();
+                playerBar.setSongInfo(song);
+            }
+        } catch (Exception e) {
+            // Không làm gì nếu không tìm thấy playerBar
+        }
     }
 
     private void toggleShuffle() {
         // TODO: Implement shuffle logic
         Toast.makeText(this, "Shuffle feature coming soon", Toast.LENGTH_SHORT).show();
-    }
-
-    private void startProgressUpdates() {
-        handler.removeCallbacksAndMessages(null);
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if (mediaPlayer != null && isPlaying) {
-                    try {
-                        int currentPosition = mediaPlayer.getCurrentPosition();
-                        seekBar.setProgress(currentPosition);
-                        tvCurrentTime.setText(formatTime(currentPosition));
-                    } catch (Exception e) {
-                        Log.e(TAG, "Error updating progress", e);
-                    }
-                }
-                handler.postDelayed(this, 100); // Update more frequently
-            }
-        }, 100);
     }
 
     private String formatTime(int milliseconds) {
@@ -517,48 +410,16 @@ public class PlayerActivity extends AppCompatActivity implements EditLyricsDialo
     }
 
     private void initializeVisualizer() {
-        // Initialize visualizer views
-        ImageButton btnVisualizerType = findViewById(R.id.btn_visualizer_type);
-        ImageButton btnVisualizerColor = findViewById(R.id.btn_visualizer_color);
-
-        // Initialize VisualizerService
+        visualizerView = findViewById(R.id.visualizer);
+        MediaPlayer mediaPlayer = queueManager.getMediaPlayer();
         visualizerService = new VisualizerService(mediaPlayer, visualizerView);
-
-        // Set up visualizer type toggle
-        btnVisualizerType.setOnClickListener(v -> {
-            isWaveform = !isWaveform;
-            visualizerService.setVisualizerType(isWaveform);
-            btnVisualizerType.setImageResource(isWaveform ? 
-                R.drawable.ic_waveform : R.drawable.ic_spectrum);
-        });
-
-        // Set up color change
-        btnVisualizerColor.setOnClickListener(v -> {
-            currentColorIndex = (currentColorIndex + 1) % colors.length;
-            visualizerService.setVisualizerColor(colors[currentColorIndex]);
-        });
-
-        // Start visualizer if music is playing
-        if (isPlaying) {
-            visualizerService.startVisualizing();
-        }
+        visualizerService.startVisualizing();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         handler.removeCallbacksAndMessages(null);
-        if (mediaPlayer != null) {
-            try {
-                if (mediaPlayer.isPlaying()) {
-                    mediaPlayer.stop();
-                }
-                mediaPlayer.release();
-            } catch (Exception e) {
-                Log.e(TAG, "Error releasing MediaPlayer", e);
-            }
-            mediaPlayer = null;
-        }
         if (visualizerService != null) {
             visualizerService.release();
             visualizerService = null;
