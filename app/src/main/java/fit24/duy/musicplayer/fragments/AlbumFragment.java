@@ -27,11 +27,8 @@ import fit24.duy.musicplayer.api.ApiClient;
 import fit24.duy.musicplayer.api.ApiService;
 import fit24.duy.musicplayer.models.ApiResponse;
 import fit24.duy.musicplayer.models.Song;
-<<<<<<< HEAD
 import fit24.duy.musicplayer.utils.UrlUtils;
-=======
 import fit24.duy.musicplayer.utils.SessionManager;
->>>>>>> fbe01fe4666d252ae90f78fa498109e62f8db0c0
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
