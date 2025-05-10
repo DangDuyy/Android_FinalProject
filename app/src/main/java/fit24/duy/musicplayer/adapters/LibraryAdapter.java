@@ -17,14 +17,14 @@ import fit24.duy.musicplayer.models.Album;
 import fit24.duy.musicplayer.models.Artist;
 import fit24.duy.musicplayer.utils.UrlUtils;
 
-public class LibraryItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+public class LibraryAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private static final int TYPE_ARTIST = 0;
     private static final int TYPE_ALBUM = 1;
 
     private List<Object> items;
     private Context context;
 
-    public LibraryItemAdapter(Context context, List<Object> items) {
+    public LibraryAdapter(Context context, List<Object> items) {
         this.context = context;
         this.items = items;
     }
@@ -79,7 +79,7 @@ public class LibraryItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
         public void bind(Artist artist) {
             artistName.setText(artist.getName());
-            
+
             String imageUrl = UrlUtils.getImageUrl(artist.getProfileImage());
             Glide.with(itemView.getContext())
                 .load(imageUrl)
@@ -112,7 +112,7 @@ public class LibraryItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         public void bind(Album album) {
             albumTitle.setText(album.getTitle());
             artistName.setText(album.getArtist() != null ? album.getArtist().getName() : "Unknown Artist");
-            
+
             String imageUrl = UrlUtils.getImageUrl(album.getCoverImage());
             Glide.with(itemView.getContext())
                 .load(imageUrl)

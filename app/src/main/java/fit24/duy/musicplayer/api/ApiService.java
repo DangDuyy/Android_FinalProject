@@ -105,4 +105,16 @@ public interface ApiService {
     @GET("/api/{id}/lyrics")
     Call<String> getLyrics(@Path("id") Long id);
 
+    @POST("songs/{songId}/like")
+    Call<ApiResponse<String>> likeSong(@Path("songId") Long songId, @Query("userId") Long userId);
+
+    @DELETE("songs/{songId}/unlike")
+    Call<ApiResponse<String>> unlikeSong(@Path("songId") Long songId, @Query("userId") Long userId);
+
+    @GET("songs/{songId}/is-liked")
+    Call<ApiResponse<Boolean>> isSongLiked(@Path("songId") Long songId, @Query("userId") Long userId);
+
+    @GET("songs/liked/{userId}")
+    Call<List<Song>> getLikedSongs(@Path("userId") Long userId);
+
 }
