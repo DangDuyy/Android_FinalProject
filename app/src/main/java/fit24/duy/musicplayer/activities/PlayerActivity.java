@@ -126,6 +126,7 @@ public class PlayerActivity extends AppCompatActivity implements EditLyricsDialo
         visualizerView = findViewById(R.id.visualizer);
         btnMenu = findViewById(R.id.btn_menu);
         btnLike = findViewById(R.id.btn_like);
+        sessionManager = new SessionManager(this);
 
         // Khởi tạo ApiService
         apiService = ApiClient.getClient().create(ApiService.class);
@@ -224,6 +225,12 @@ public class PlayerActivity extends AppCompatActivity implements EditLyricsDialo
         btnPrev.bringToFront();
         btnShuffle.bringToFront();
         btnRepeat.bringToFront();
+
+        // Nút back
+        ImageView btnBack = findViewById(R.id.btn_back);
+        btnBack.setOnClickListener(v -> {
+            finish();
+        });
     }
 
     private void updatePlayPauseButton() {

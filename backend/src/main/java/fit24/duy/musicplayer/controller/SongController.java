@@ -176,14 +176,13 @@ public class SongController {
         return ResponseEntity.ok(lyricsDTO);
     }
 
-<<<<<<< HEAD
     @GetMapping("/random")
     public List<Song> getRandomSongs(@RequestParam(defaultValue = "10") int count) {
         return songService.getRandomSongs(count);
     }
 
     // Add other song-related endpoints as needed
-=======
+
     // API để người dùng like một bài hát
     @PostMapping("/{songId}/like")
     @Transactional
@@ -274,5 +273,4 @@ public class SongController {
 
         return ResponseEntity.ok(likedSongs);
     }
->>>>>>> fbe01fe4666d252ae90f78fa498109e62f8db0c0
 }

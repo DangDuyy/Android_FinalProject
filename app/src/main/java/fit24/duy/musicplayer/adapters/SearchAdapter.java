@@ -85,8 +85,8 @@ public class SearchAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         public SongViewHolder(View itemView) {
             super(itemView);
             tvTitle = itemView.findViewById(R.id.song_title);
-            tvArtist = itemView.findViewById(R.id.artist_name);
-            imgCover = itemView.findViewById(R.id.album_art);
+            tvArtist = itemView.findViewById(R.id.song_artist);
+            imgCover = itemView.findViewById(R.id.song_image);
         }
 
         public void bind(Song song) {
