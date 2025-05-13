@@ -58,4 +58,9 @@
             android:id="@+id/navigation_liked_songs"
             android:name="fit24.duy.musicplayer.fragments.LikedSongsFragment"
             android:label="Liked Songs" />
+
+        <fragment
+            android:id="@+id/navigation_edit_profile"
+            android:name="fit24.duy.musicplayer.fragments.EditProfileFragment"
+            android:label="Edit Profile" />
 </navigation>
