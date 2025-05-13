@@ -146,7 +146,7 @@ public class SongController {
         return songService.getSongsByAlbum(albumId);
     }
 
-    // Lyrics endpoints
+    // Lyrics endpoint - chỉ để xem lyrics
     @GetMapping("/{songId}/lyrics")
     public ResponseEntity<LyricsDTO> getLyrics(@PathVariable Long songId) {
         Song song = songService.getSongById(songId);
@@ -161,29 +161,11 @@ public class SongController {
         return ResponseEntity.ok(lyricsDTO);
     }
 
-    @PostMapping("/{songId}/lyrics")
-    public ResponseEntity<LyricsDTO> updateLyrics(
-            @PathVariable Long songId,
-            @RequestBody LyricsDTO lyricsDTO) {
-        Song song = songService.getSongById(songId);
-        if (song == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        song.setLyrics(lyricsDTO.getLyrics());
-        songService.updateSong(song);
-
-        return ResponseEntity.ok(lyricsDTO);
-    }
-
-<<<<<<< HEAD
     @GetMapping("/random")
     public List<Song> getRandomSongs(@RequestParam(defaultValue = "10") int count) {
         return songService.getRandomSongs(count);
     }
 
-    // Add other song-related endpoints as needed
-=======
     // API để người dùng like một bài hát
     @PostMapping("/{songId}/like")
     @Transactional
@@ -274,5 +256,4 @@ public class SongController {
 
         return ResponseEntity.ok(likedSongs);
     }
->>>>>>> fbe01fe4666d252ae90f78fa498109e62f8db0c0
 }
