@@ -4,11 +4,13 @@ public class UserResponse {
     private long id;
     private String username;
     private String email;
+    private String profileImage;
 
-    public UserResponse(long id, String username, String email) {
+    public UserResponse(long id, String username, String email, String profileImage) {
         this.id = id;
         this.username = username;
         this.email = email;
+        this.profileImage = profileImage;
     }
 
     // Getters và setters
@@ -34,5 +36,13 @@ public class UserResponse {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getProfileImage() {
+        return profileImage;
+    }
+
+    public void setProfileImage(String profileImage) {
+        this.profileImage = profileImage;
     }
 }

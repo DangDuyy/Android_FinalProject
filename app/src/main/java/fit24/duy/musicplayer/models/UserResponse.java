@@ -6,6 +6,16 @@ public class UserResponse {
     private String email;
     private String token;
 
+    private String profileImage;
+
+    public String getProfileImage() {
+        return profileImage;
+    }
+
+    public void setProfileImage(String profileImage) {
+        this.profileImage = profileImage;
+    }
+
     public long getId() {
         return id;
     }

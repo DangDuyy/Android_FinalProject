@@ -10,7 +10,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 @RestController
@@ -38,7 +44,7 @@ public class AuthController {
         }
 
         // Trả về thông tin user
-        return ResponseEntity.ok(new UserResponse(user.getId(), user.getUsername(), user.getEmail()));
+        return ResponseEntity.ok(new UserResponse(user.getId(), user.getUsername(), user.getEmail(), user.getProfileImage()));
     }
 
     // Lấy danh sách users (nếu cần)
@@ -101,5 +107,62 @@ public class AuthController {
         userRepository.save(user);
 
         return ResponseEntity.ok("Password updated successfully");
+    }
+
+    // API để cập nhật thông tin profile (username và ảnh)
+    @PutMapping("/profile/{userId}")
+    public ResponseEntity<?> updateProfile(
+            @PathVariable Long userId,
+            @RequestParam(required = false) String username,
+            @RequestParam(required = false) MultipartFile profileImage) {
+        // Kiểm tra user tồn tại
+        User user = userRepository.findById(userId)
+                .orElse(null);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+        }
+
+        // Cập nhật username nếu có
+        if (username != null && !username.isEmpty() && !username.equals(user.getUsername())) {
+            user.setUsername(username);
+        }
+
+        // Xử lý upload ảnh nếu có
+        if (profileImage != null && !profileImage.isEmpty()) {
+            try {
+                // Định nghĩa đường dẫn thư mục lưu ảnh
+                String uploadDir = "C:/Uploads/";
+                File dir = new File(uploadDir);
+                if (!dir.exists()) {
+                    dir.mkdirs();
+                }
+
+                // Tạo tên file duy nhất
+                String fileName = "user_" + userId + "_" + System.currentTimeMillis() + "." +
+                        profileImage.getOriginalFilename().split("\\.")[1];
+                Path filePath = Paths.get(uploadDir + fileName);
+
+                // Lưu ảnh vào thư mục
+                Files.write(filePath, profileImage.getBytes());
+
+                // Xóa ảnh cũ nếu tồn tại
+                if (user.getProfileImage() != null && !user.getProfileImage().isEmpty()) {
+                    File oldImage = new File(uploadDir + user.getProfileImage());
+                    if (oldImage.exists()) {
+                        oldImage.delete();
+                    }
+                }
+
+                // Chỉ lưu tên file ảnh (không lưu đường dẫn)
+                user.setProfileImage(fileName);
+            } catch (IOException e) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body("Failed to upload image: " + e.getMessage());
+            }
+        }
+
+        // Lưu thông tin user đã cập nhật
+        userRepository.save(user);
+        return ResponseEntity.ok(new UserResponse(user.getId(), user.getUsername(), user.getEmail(), user.getProfileImage()));
     }
 }

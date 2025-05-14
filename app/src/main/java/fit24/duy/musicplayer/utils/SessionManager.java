@@ -12,6 +12,7 @@ public class SessionManager {
     private static final String KEY_USERNAME = "username";
     private static final String KEY_EMAIL = "email";
     private static final String KEY_TOKEN = "token";
+    private static final String KEY_PROFILE_IMAGE = "profileImage";
 
     private SharedPreferences pref;
     private SharedPreferences.Editor editor;
@@ -30,8 +31,20 @@ public class SessionManager {
         editor.putString(KEY_EMAIL, email);
         editor.putString(KEY_TOKEN, token);
         editor.commit();
-        
+
         Log.d(TAG, "User login session created for: " + username);
+    }
+
+    public void createLoginSessionWithProfile(String userId, String username, String email, String token, String profileImage) {
+        editor.putBoolean(KEY_IS_LOGGED_IN, true);
+        editor.putString(KEY_USER_ID, userId);
+        editor.putString(KEY_USERNAME, username);
+        editor.putString(KEY_EMAIL, email);
+        editor.putString(KEY_TOKEN, token);
+        editor.putString(KEY_PROFILE_IMAGE, profileImage);
+        editor.commit();
+
+        Log.d(TAG, "User login session created with profile for: " + username);
     }
 
     public boolean isLoggedIn() {
@@ -54,9 +67,19 @@ public class SessionManager {
         return pref.getString(KEY_TOKEN, null);
     }
 
+    public String getProfileImage() {
+        return pref.getString(KEY_PROFILE_IMAGE, null);
+    }
+
+    public void saveProfileImage(String profileImage) {
+        editor.putString(KEY_PROFILE_IMAGE, profileImage);
+        editor.apply();
+        Log.d(TAG, "Profile image updated: " + profileImage);
+    }
+
     public void logout() {
         editor.clear();
         editor.commit();
         Log.d(TAG, "User session cleared - logged out");
     }
-} 
+}

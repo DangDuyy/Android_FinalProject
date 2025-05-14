@@ -68,7 +68,8 @@ public class MainActivity extends AppCompatActivity {
             if (destination.getId() == R.id.navigation_search_result || destination.getId() == R.id.navigation_artist
                     || destination.getId() == R.id.navigation_album || destination.getId() == R.id.navigation_album_control
                     || destination.getId() == R.id.navigation_artist_control || destination.getId() == R.id.navigation_media_type
-                    || destination.getId() == R.id.navigation_liked_songs) {
+                    || destination.getId() == R.id.navigation_liked_songs || destination.getId() == R.id.navigation_edit_profile
+                    || destination.getId() == R.id.navigation_profile) {
                 getSupportActionBar().hide();
             } else {
                 getSupportActionBar().show();
