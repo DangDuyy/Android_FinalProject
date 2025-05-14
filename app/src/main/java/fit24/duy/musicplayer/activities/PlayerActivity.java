@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
-import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.SeekBar;
@@ -18,14 +17,13 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.navigation.NavController;
-import androidx.navigation.Navigation;
 
 import com.bumptech.glide.Glide;
 
 import fit24.duy.musicplayer.R;
 import fit24.duy.musicplayer.api.ApiClient;
 import fit24.duy.musicplayer.api.ApiService;
+import fit24.duy.musicplayer.dialogs.QueueDialog;
 import fit24.duy.musicplayer.models.ApiResponse;
 import fit24.duy.musicplayer.models.Song;
 import fit24.duy.musicplayer.utils.SessionManager;
@@ -37,23 +35,20 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-import java.io.InputStream;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.net.HttpURLConnection;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.URL;
-import org.json.JSONObject;
-import java.io.IOException;
+
 import android.media.MediaPlayer;
+import android.widget.PopupMenu;
+
 
 public class PlayerActivity extends AppCompatActivity {
     private static final String TAG = "PlayerActivity";
     private static final int PERMISSION_REQUEST_CODE = 123;
     
-    private ImageButton btnPlayPause, btnNext, btnPrev, btnMenu, btnLike, btnBack;
+    private ImageButton btnPlayPause, btnNext, btnPrev, btnMenu, btnLike, btnBack, btnQueue;
     private SeekBar seekBar;
-    private TextView tvCurrentTime, tvDuration;
+    private TextView tvCurrentTime, tvDuration, tvLyrics;
     private ImageView imgAlbumArt;
     private TextView tvSongTitle, tvArtist;
     private Handler handler = new Handler(Looper.getMainLooper());
@@ -70,6 +65,11 @@ public class PlayerActivity extends AppCompatActivity {
     private MusicVisualizerView visualizerView;
     private VisualizerService visualizerService;
     private boolean isWaveform = true;
+
+    private void downloadSong() {
+        // Logic to download the song
+        Toast.makeText(this, "Downloading song...", Toast.LENGTH_SHORT).show();
+    }
     private int[] colors = {
         android.graphics.Color.parseColor("#FF6B6B"),
         android.graphics.Color.parseColor("#4ECDC4"),
@@ -122,15 +122,17 @@ public class PlayerActivity extends AppCompatActivity {
     }
 
     private void initializeViews() {
-        btnPlayPause = findViewById(R.id.btn_play_pause);
-        btnNext = findViewById(R.id.btn_next);
         btnPrev = findViewById(R.id.btn_prev);
+        btnPlayPause = findViewById(R.id.btn_play_pause);
+        btnQueue = findViewById(R.id.queue_button);
+        btnNext = findViewById(R.id.btn_next);
         seekBar = findViewById(R.id.seekBar);
         tvCurrentTime = findViewById(R.id.tv_current_time);
         tvDuration = findViewById(R.id.tv_duration);
         imgAlbumArt = findViewById(R.id.img_album_art);
         tvSongTitle = findViewById(R.id.tv_song_title);
         tvArtist = findViewById(R.id.tv_artist);
+        tvLyrics = findViewById(R.id.tv_lyrics);
         visualizerView = findViewById(R.id.visualizer);
         btnMenu = findViewById(R.id.btn_menu);
         btnLike = findViewById(R.id.btn_like);
@@ -154,9 +156,18 @@ public class PlayerActivity extends AppCompatActivity {
             finish();
             return;
         }
+
+        if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+            initializeVisualizer();
+        } else {
+            Log.e(TAG, "MediaPlayer chưa phát nhạc. Visualizer không thể khởi động.");
+        }
     }
 
     private void setupClickListeners() {
+        btnPrev.setOnClickListener(v -> {
+            Toast.makeText(this, "Previous song feature coming soon", Toast.LENGTH_SHORT).show();
+        });
         btnPlayPause.setOnClickListener(v -> {
             if (mediaPlayer != null) {
                 if (mediaPlayer.isPlaying()) {
@@ -173,10 +184,6 @@ public class PlayerActivity extends AppCompatActivity {
             Toast.makeText(this, "Next song feature coming soon", Toast.LENGTH_SHORT).show();
         });
 
-        btnPrev.setOnClickListener(v -> {
-            Toast.makeText(this, "Previous song feature coming soon", Toast.LENGTH_SHORT).show();
-        });
-
         if (btnMenu != null) {
             btnMenu.setOnClickListener(v -> {
                 Intent intent = new Intent(PlayerActivity.this, SongControlActivity.class);
@@ -190,6 +197,14 @@ public class PlayerActivity extends AppCompatActivity {
                 startActivity(intent);
             });
         }
+
+        btnQueue.setOnClickListener(v -> {
+            if (queueManager.getQueue().isEmpty()) {
+                queueManager.fillQueueWithRandomSongs(10); // Populate queue with random songs
+            }
+            openQueueDialog();
+        });
+
 
         if (btnLike != null) {
             btnLike.setOnClickListener(v -> {
@@ -214,15 +229,32 @@ public class PlayerActivity extends AppCompatActivity {
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {}
         });
-
+        btnPrev.bringToFront();
         btnPlayPause.bringToFront();
         btnNext.bringToFront();
-        btnPrev.bringToFront();
 
         // Nút back
         ImageView btnBack = findViewById(R.id.btn_back);
         btnBack.setOnClickListener(v -> {
             finish();
+        });
+
+        btnMenu.setOnClickListener(v -> {
+            // Create a PopupMenu
+            PopupMenu popupMenu = new PopupMenu(this, btnMenu);
+            popupMenu.getMenuInflater().inflate(R.menu.song_menu, popupMenu.getMenu());
+
+            // Handle menu item clicks
+            popupMenu.setOnMenuItemClickListener(item -> {
+                if (item.getItemId() == R.id.menu_download) {
+                    downloadSong();
+                    return true;
+                }
+                return false;
+            });
+
+            // Show the menu
+            popupMenu.show();
         });
     }
 
@@ -377,8 +409,12 @@ public class PlayerActivity extends AppCompatActivity {
         if (visualizerService != null) {
             visualizerService.release();
         }
+        if (mediaPlayer != null) {
+            mediaPlayer.stop();
+            mediaPlayer.release();
+            mediaPlayer = null;
+        }
     }
-
     @Override
     protected void onResume() {
         super.onResume();
@@ -396,11 +432,13 @@ public class PlayerActivity extends AppCompatActivity {
                     Log.d("PlayerActivity", "API filePath: " + song.getFilePath());
                     tvSongTitle.setText(song.getTitle());
                     tvArtist.setText(song.getArtist() != null ? song.getArtist().getName() : "Unknown Artist");
+                    tvLyrics.setText(song.getLyrics());
                     Glide.with(PlayerActivity.this)
                         .load(fit24.duy.musicplayer.utils.UrlUtils.getImageUrl(song.getCoverImage()))
                         .centerCrop()
                         .into(imgAlbumArt);
                     playSong(song.getFilePath());
+
                 } else {
                     Toast.makeText(PlayerActivity.this, "Failed to load song info", Toast.LENGTH_SHORT).show();
                 }
@@ -430,5 +468,24 @@ public class PlayerActivity extends AppCompatActivity {
             Log.e("PlayerActivity", "Play error: " + e.getMessage());
             Toast.makeText(this, "Cannot play this song: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void openQueueDialog() {
+        List<Song> queue = queueManager.getQueue();
+        int currentIndex = queueManager.getCurrentIndex();
+
+        QueueDialog dialog = QueueDialog.newInstance(queue, currentIndex);
+        dialog.setOnQueueItemClickListener(new QueueDialog.OnQueueItemClickListener() {
+            @Override
+            public void onItemClick(int position) {
+                queueManager.playSongAt(position); // Gọi playSongAt từ QueueManager
+            }
+
+            @Override
+            public void onItemRemoved(int position) {
+                queueManager.removeSongAt(position); // Gọi removeSongAt từ QueueManager
+            }
+        });
+        dialog.show(getSupportFragmentManager(), "QueueDialog");
     }
 }

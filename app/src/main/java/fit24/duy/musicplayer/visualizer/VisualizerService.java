@@ -22,6 +22,9 @@ public class VisualizerService {
     private void setupVisualizer() {
         try {
             int audioSessionId = mediaPlayer.getAudioSessionId();
+            if (audioSessionId == -1) {
+                throw new IllegalStateException("AudioSessionId không hợp lệ");
+            }
             visualizer = new Visualizer(audioSessionId);
             visualizer.setCaptureSize(Visualizer.getCaptureSizeRange()[1]);
 
@@ -42,16 +45,15 @@ public class VisualizerService {
             };
 
             visualizer.setDataCaptureListener(
-                captureListener,
-                Visualizer.getMaxCaptureRate() / 2,
-                true,
-                true
+                    captureListener,
+                    Visualizer.getMaxCaptureRate() / 2,
+                    true,
+                    true
             );
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-
     public void startVisualizing() {
         if (visualizer != null) {
             isVisualizing = true;

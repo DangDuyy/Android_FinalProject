@@ -1,5 +1,6 @@
 package fit24.duy.musicplayer.fragments;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -23,11 +24,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import fit24.duy.musicplayer.R;
+import fit24.duy.musicplayer.activities.PlayerActivity;
 import fit24.duy.musicplayer.adapters.MusicAdapter;
 import fit24.duy.musicplayer.adapters.SearchAdapter;
 import fit24.duy.musicplayer.api.ApiService;
 import fit24.duy.musicplayer.api.RetrofitClient;
 import fit24.duy.musicplayer.models.SearchResponse;
+import fit24.duy.musicplayer.models.Song;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -88,9 +91,8 @@ public class SearchResultFragment extends Fragment {
 
     private void performSearch(String query) {
         if (query.isEmpty()) {
-            // Nếu query trống, ẩn danh sách kết quả
             searchResultsRecyclerView.setAdapter(null);
-            return; // Dừng tìm kiếm khi không có chữ
+            return;
         }
 
         ApiService apiService = RetrofitClient.getRetrofit().create(ApiService.class);
@@ -104,6 +106,13 @@ public class SearchResultFragment extends Fragment {
                     results.addAll(response.body().getAlbums());
 
                     SearchAdapter adapter = new SearchAdapter(getContext(), results);
+                    adapter.setOnItemClickListener(item -> {
+                        if (item instanceof Song) {
+                            Intent intent = new Intent(getContext(), PlayerActivity.class);
+                            intent.putExtra("song_id", ((Song) item).getId()); // Truyền song_id
+                            startActivity(intent);
+                        }
+                    });
                     searchResultsRecyclerView.setAdapter(adapter);
                 }
             }
@@ -113,7 +122,5 @@ public class SearchResultFragment extends Fragment {
                 Toast.makeText(getContext(), "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
-    }
-
-}
+    }}
 

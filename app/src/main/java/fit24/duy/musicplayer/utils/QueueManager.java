@@ -151,48 +151,28 @@ public class QueueManager {
     }
 
     private Song fetchRandomSong() {
-        ContentResolver contentResolver = context.getContentResolver();
-        String[] projection = {
-                MediaStore.Audio.Media._ID,
-                MediaStore.Audio.Media.TITLE,
-                MediaStore.Audio.Media.ARTIST,
-                MediaStore.Audio.Media.DATA
-        };
+        ApiService apiService = ApiClient.getClient().create(ApiService.class);
+        Call<List<Song>> call = apiService.getRandomSongs(1); // Lấy 1 bài hát ngẫu nhiên
+        final Song[] randomSong = {null};
 
-        String selection = MediaStore.Audio.Media.IS_MUSIC + "!= 0";
-        Cursor cursor = contentResolver.query(
-                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                projection,
-                selection,
-                null,
-                null
-        );
-
-        if (cursor != null && cursor.moveToFirst()) {
-            List<Song> allSongs = new ArrayList<>();
-            do {
-                long id = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID));
-                String title = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE));
-                String artist = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST));
-                String path = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA));
-
-                Song song = new Song(id, title, artist, path);
-                if (lastPlayedSong == null || !song.getPath().equals(lastPlayedSong.getPath())) {
-                    allSongs.add(song);
+        call.enqueue(new Callback<List<Song>>() {
+            @Override
+            public void onResponse(Call<List<Song>> call, Response<List<Song>> response) {
+                if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
+                    randomSong[0] = response.body().get(0); // Lấy bài hát đầu tiên
+                } else {
+                    Log.e(TAG, "Không có bài hát nào từ API");
                 }
-            } while (cursor.moveToNext());
-            cursor.close();
-
-            if (!allSongs.isEmpty()) {
-                Random random = new Random();
-                Song randomSong = allSongs.get(random.nextInt(allSongs.size()));
-                lastPlayedSong = randomSong;
-                return randomSong;
             }
-        }
-        return null;
-    }
 
+            @Override
+            public void onFailure(Call<List<Song>> call, Throwable t) {
+                Log.e(TAG, "Lỗi khi gọi API lấy bài hát ngẫu nhiên", t);
+            }
+        });
+
+        return randomSong[0];
+    }
     private void notifyQueueChanged() {
         if (queueChangeListener != null) {
             queueChangeListener.onQueueChanged(queue, currentIndex);
@@ -211,70 +191,24 @@ public class QueueManager {
         queue.clear();
         currentIndex = -1;
 
-        ContentResolver contentResolver = context.getContentResolver();
-        String[] projection = {
-            MediaStore.Audio.Media._ID,
-            MediaStore.Audio.Media.TITLE,
-            MediaStore.Audio.Media.ARTIST,
-            MediaStore.Audio.Media.DATA
-        };
-        String selection = MediaStore.Audio.Media.IS_MUSIC + "!= 0";
-        Cursor cursor = contentResolver.query(
-            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-            projection,
-            selection,
-            null,
-            null
-        );
-
-        Set<String> uniquePaths = new HashSet<>();
-        List<Song> allSongs = new ArrayList<>();
-        if (cursor != null && cursor.moveToFirst()) {
-            do {
-                long id = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID));
-                String title = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE));
-                String artist = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST));
-                String path = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA));
-                if (!uniquePaths.contains(path)) {
-                    allSongs.add(new Song(id, title, artist, path));
-                    uniquePaths.add(path);
-                }
-            } while (cursor.moveToNext());
-            cursor.close();
-        }
-
-        Collections.shuffle(allSongs);
-        for (int i = 0; i < Math.min(count, allSongs.size()); i++) {
-            addSong(allSongs.get(i));
-        }
-        if (!queue.isEmpty()) {
-            currentIndex = 0;
-        }
-        notifyQueueChanged();
-    }
-
-    public void fillQueueWithRandomSongsFromApi(int count) {
-        queue.clear();
-        currentIndex = -1;
         ApiService apiService = ApiClient.getClient().create(ApiService.class);
         Call<List<Song>> call = apiService.getRandomSongs(count);
+
         call.enqueue(new Callback<List<Song>>() {
             @Override
             public void onResponse(Call<List<Song>> call, Response<List<Song>> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    List<Song> songs = response.body();
-                    for (Song song : songs) {
-                        queue.add(song);
-                    }
-                    if (!queue.isEmpty()) {
-                        currentIndex = 0;
-                    }
+                    queue.addAll(response.body());
+                    currentIndex = queue.isEmpty() ? -1 : 0;
                     notifyQueueChanged();
+                } else {
+                    Log.e(TAG, "API không trả về danh sách bài hát");
                 }
             }
+
             @Override
             public void onFailure(Call<List<Song>> call, Throwable t) {
-                Log.e(TAG, "Failed to fetch random songs from API", t);
+                Log.e(TAG, "Lỗi khi gọi API lấy danh sách bài hát", t);
             }
         });
     }
@@ -359,7 +293,22 @@ public class QueueManager {
             mediaPlayer.seekTo(position);
         }
     }
+    public void playSongAt(int position) {
+        if (position >= 0 && position < queue.size()) {
+            currentIndex = position;
+            play(); // Gọi phương thức play() để phát bài hát tại vị trí hiện tại
+        }
+    }
 
+    public void removeSongAt(int position) {
+        if (position >= 0 && position < queue.size()) {
+            queue.remove(position);
+            if (currentIndex >= position) {
+                currentIndex = Math.max(0, currentIndex - 1);
+            }
+            notifyQueueChanged();
+        }
+    }
     public MediaPlayer getMediaPlayer() {
         return mediaPlayer;
     }

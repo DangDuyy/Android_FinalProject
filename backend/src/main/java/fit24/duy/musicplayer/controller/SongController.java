@@ -1,6 +1,5 @@
 package fit24.duy.musicplayer.controller;
 
-import fit24.duy.musicplayer.dto.LyricsDTO;
 import fit24.duy.musicplayer.dto.SongResponse;
 import fit24.duy.musicplayer.entity.Album;
 import fit24.duy.musicplayer.entity.Song;
@@ -145,23 +144,6 @@ public class SongController {
 	public List<Song> getSongsByAlbum(@PathVariable Long albumId) {
 		return songService.getSongsByAlbum(albumId);
 	}
-
-	// Lyrics endpoint - chỉ để xem lyrics
-	@GetMapping("/{songId}/lyrics")
-	public ResponseEntity<LyricsDTO> getLyrics(@PathVariable Long songId) {
-		Song song = songService.getSongById(songId);
-		if (song == null) {
-			return ResponseEntity.notFound().build();
-		}
-
-		LyricsDTO lyricsDTO = new LyricsDTO();
-		lyricsDTO.setLyrics(song.getLyrics());
-		lyricsDTO.setLanguage("vi"); // Mặc định là tiếng Việt
-
-		return ResponseEntity.ok(lyricsDTO);
-	}
-
-
 	@GetMapping("/random")
 	public List<Song> getRandomSongs(@RequestParam(defaultValue = "10") int count) {
 		return songService.getRandomSongs(count);
@@ -258,5 +240,4 @@ public class SongController {
 
 		return ResponseEntity.ok(likedSongs);
 	}
-}
 }

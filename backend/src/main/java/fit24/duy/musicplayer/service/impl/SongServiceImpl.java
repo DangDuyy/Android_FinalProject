@@ -67,7 +67,7 @@ public class SongServiceImpl implements SongService {
     @Override
     public List<Song> getRecommendedSongs() {
         // TODO: Implement recommendation logic
-        return songRepository.findAll().subList(0, Math.min(5, songRepository.findAll().size()));
+        return songRepository.findAll().subList(0, Math.min(10, songRepository.findAll().size()));
     }
 
     @Override

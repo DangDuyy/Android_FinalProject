@@ -63,7 +63,7 @@ public class QueueDialog extends DialogFragment {
 
         // Luôn random queue mới nhất từ backend mỗi lần mở dialog
         QueueManager queueManager = QueueManager.getInstance(requireContext());
-        queueManager.fillQueueWithRandomSongsFromApi(10);
+        queueManager.fillQueueWithRandomSongs(10);
 
         // Set up RecyclerView
         RecyclerView recyclerView = view.findViewById(R.id.queue_recycler_view);
@@ -71,10 +71,10 @@ public class QueueDialog extends DialogFragment {
         adapter = new QueueAdapter(queueManager.getQueue(), queueManager.getCurrentIndex());
         recyclerView.setAdapter(adapter);
 
-        // Lắng nghe sự thay đổi queue để cập nhật adapter
-        queueManager.setOnQueueChangeListener((newQueue, newCurrentIndex) -> {
-            adapter.songs = newQueue;
-            adapter.currentIndex = newCurrentIndex;
+        // Update adapter when queue changes
+        QueueManager.getInstance(requireContext()).setOnQueueChangeListener((newQueue, newCurrentIndex) -> {
+            queue = newQueue;
+            currentIndex = newCurrentIndex;
             adapter.notifyDataSetChanged();
         });
 
@@ -109,12 +109,11 @@ public class QueueDialog extends DialogFragment {
             holder.cardView.setCardBackgroundColor(position == currentIndex ? 
                 getContext().getColor(R.color.purple_500) : 
                 getContext().getColor(R.color.white));
-            
-            // Set click listener for the entire item
+
             holder.itemView.setOnClickListener(v -> {
                 if (listener != null) {
-                    listener.onItemClick(position);
-                    dismiss(); // Close dialog after selection
+                    listener.onItemClick(position); // Gọi callback onItemClick
+                    dismiss(); // Đóng dialog sau khi chọn bài hát
                 }
             });
         }
