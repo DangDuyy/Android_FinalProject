@@ -5,6 +5,8 @@ public class UserResponse {
     private String username;
     private String email;
     private String token;
+    private int status;  // 👈 phải có dòng này
+
 
     private String profileImage;
 
@@ -18,6 +20,16 @@ public class UserResponse {
 
     public long getId() {
         return id;
+    }
+
+
+    // Getter & Setter cho status
+    public int getStatus() {
+        return status;
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
     }
 
     public String getUsername() {

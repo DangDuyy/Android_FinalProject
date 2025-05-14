@@ -18,7 +18,7 @@ public class Song implements Serializable {
     private String filePath;
     private String path;
     private String thumbnail;
-    private static final String BASE_URL = "http://10.0.2.2:8080/"; // URL của server của bạn
+    public static final String BASE_URL = "http://10.0.2.2:8080/"; // URL của server của bạn
     private static final String TAG = "Song";
 
     public Song(long id, String title, String artist, String path) {

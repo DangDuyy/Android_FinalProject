@@ -165,13 +165,16 @@ public class EditProfileFragment extends Fragment {
                             ", Email: " + updatedUser.getEmail() +
                             ", ProfileImage: " + updatedUser.getProfileImage());
 
+                    int userStatus = sessionManager.getUserStatus();
+
                     // Cập nhật session với thông tin mới
                     sessionManager.createLoginSessionWithProfile(
                             String.valueOf(updatedUser.getId()),
                             updatedUser.getUsername(),
                             updatedUser.getEmail(),
                             updatedUser.getToken(),
-                            updatedUser.getProfileImage() != null ? updatedUser.getProfileImage() : ""
+                            updatedUser.getProfileImage() != null ? updatedUser.getProfileImage() : "",
+                            userStatus
                     );
 
                     // Tải lại ảnh hồ sơ sau khi cập nhật

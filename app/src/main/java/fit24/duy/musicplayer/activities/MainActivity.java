@@ -39,7 +39,12 @@ public class MainActivity extends AppCompatActivity {
             MusicPlayerService.LocalBinder binder = (MusicPlayerService.LocalBinder) service;
             musicService = binder.getService();
             isServiceBound = true;
+
+            // Lấy thông tin userStatus từ MusicPlayerService
+            int userStatus = musicService.getUserStatus();
+            Log.d("PlayerActivity", "User Status: " + userStatus);
         }
+
         @Override
         public void onServiceDisconnected(ComponentName name) {
             isServiceBound = false;
@@ -53,11 +58,15 @@ public class MainActivity extends AppCompatActivity {
 
         sessionManager = new SessionManager(this);
 
+        // Kiểm tra đăng nhập và lấy trạng thái người dùng
         if (!sessionManager.isLoggedIn()) {
             startActivity(new Intent(this, WelcomeActivity.class));
             finish();
             return;
         }
+
+        // Lấy thông tin userStatus từ SessionManager
+        int userStatus = sessionManager.getUserStatus();
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -76,7 +85,9 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        // Bind MusicPlayerService and pass the userStatus
         Intent serviceIntent = new Intent(this, MusicPlayerService.class);
+        serviceIntent.putExtra("userStatus", userStatus);  // Passing the userStatus to the service
         bindService(serviceIntent, serviceConnection, BIND_AUTO_CREATE);
     }
 
@@ -121,4 +132,4 @@ public class MainActivity extends AppCompatActivity {
             Log.d(TAG, "MediaPlayer released");
         }
     }
-} 
+}

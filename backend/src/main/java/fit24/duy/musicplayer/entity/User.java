@@ -2,12 +2,15 @@ package fit24.duy.musicplayer.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
+import lombok.Data;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 @Entity
+@Data
 @Table(name = "users")
 public class User {
 
@@ -25,6 +28,9 @@ public class User {
     private String password;
 
     private String profileImage;
+
+    @Column(nullable = false)
+    private int status;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonBackReference
@@ -62,86 +68,6 @@ public class User {
     private List<PlayHistory> playHistory = new ArrayList<>();
 
     public User() {}
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getProfileImage() {
-        return profileImage;
-    }
-
-    public void setProfileImage(String profileImage) {
-        this.profileImage = profileImage;
-    }
-
-    public List<Playlist> getPlaylists() {
-        return playlists;
-    }
-
-    public void setPlaylists(List<Playlist> playlists) {
-        this.playlists = playlists;
-    }
-
-    public Set<Content> getLikedContents() {
-        return likedContents;
-    }
-
-    public void setLikedContents(Set<Content> likedContents) {
-        this.likedContents = likedContents;
-    }
-
-    public Set<Artist> getFollowedArtists() {
-        return followedArtists;
-    }
-
-    public void setFollowedArtists(Set<Artist> followedArtists) {
-        this.followedArtists = followedArtists;
-    }
-
-    public Set<Album> getAddedAlbums() {
-        return addedAlbums;
-    }
-
-    public void setAddedAlbums(Set<Album> addedAlbums) {
-        this.addedAlbums = addedAlbums;
-    }
-
-    public List<PlayHistory> getPlayHistory() {
-        return playHistory;
-    }
-
-    public void setPlayHistory(List<PlayHistory> playHistory) {
-        this.playHistory = playHistory;
-    }
 
     @Override
     public boolean equals(Object o) {

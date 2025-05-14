@@ -32,6 +32,9 @@ public class LoginActivity extends AppCompatActivity {
         // Initialize SessionManager
         sessionManager = new SessionManager(this);
 
+        // Retrieve user status from SessionManager (after initialization)
+        int userStatus = sessionManager.getUserStatus();  // Moved inside onCreate()
+
         // Initialize views
         edtEmail = findViewById(R.id.edtEmail);
         edtPassword = findViewById(R.id.edtPassword);
@@ -40,7 +43,7 @@ public class LoginActivity extends AppCompatActivity {
         findViewById(R.id.btnBack).setOnClickListener(v -> finish());
 
         // Login button
-        findViewById(R.id.btnLogin).setOnClickListener(v -> handleLogin());
+        findViewById(R.id.btnLogin).setOnClickListener(v -> handleLogin(userStatus));  // Pass userStatus here
 
         // Forgot password
         findViewById(R.id.btnForgotPassword).setOnClickListener(v -> {
@@ -49,7 +52,7 @@ public class LoginActivity extends AppCompatActivity {
         });
     }
 
-    private void handleLogin() {
+    private void handleLogin(int userStatus) {  // Accept userStatus as parameter
         String email = edtEmail.getText().toString().trim();
         String password = edtPassword.getText().toString().trim();
 
@@ -75,10 +78,11 @@ public class LoginActivity extends AppCompatActivity {
 
                     // Lưu phiên đăng nhập với SessionManager
                     sessionManager.createLoginSession(
-                        String.valueOf(user.getId()),
-                        user.getUsername(),
-                        user.getEmail(),
-                        user.getToken()
+                            String.valueOf(user.getId()),
+                            user.getUsername(),
+                            user.getEmail(),
+                            user.getToken(),
+                            userStatus
                     );
 
                     // Chuyển hướng đến MainActivity

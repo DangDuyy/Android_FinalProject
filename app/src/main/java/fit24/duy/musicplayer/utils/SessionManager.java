@@ -24,24 +24,26 @@ public class SessionManager {
         editor = pref.edit();
     }
 
-    public void createLoginSession(String userId, String username, String email, String token) {
+    public void createLoginSession(String userId, String username, String email, String token, int status) {
         editor.putBoolean(KEY_IS_LOGGED_IN, true);
         editor.putString(KEY_USER_ID, userId);
         editor.putString(KEY_USERNAME, username);
         editor.putString(KEY_EMAIL, email);
         editor.putString(KEY_TOKEN, token);
+        editor.putInt("userStatus", status);  // Lưu status vào SharedPreferences
         editor.commit();
 
         Log.d(TAG, "User login session created for: " + username);
     }
 
-    public void createLoginSessionWithProfile(String userId, String username, String email, String token, String profileImage) {
+    public void createLoginSessionWithProfile(String userId, String username, String email, String token, String profileImage, int status) {
         editor.putBoolean(KEY_IS_LOGGED_IN, true);
         editor.putString(KEY_USER_ID, userId);
         editor.putString(KEY_USERNAME, username);
         editor.putString(KEY_EMAIL, email);
         editor.putString(KEY_TOKEN, token);
         editor.putString(KEY_PROFILE_IMAGE, profileImage);
+        editor.putInt("userStatus", status);  // Lưu status vào SharedPreferences
         editor.commit();
 
         Log.d(TAG, "User login session created with profile for: " + username);
@@ -69,6 +71,16 @@ public class SessionManager {
 
     public String getProfileImage() {
         return pref.getString(KEY_PROFILE_IMAGE, null);
+    }
+
+    public int getUserStatus() {
+        return pref.getInt("userStatus", -1); // Lấy status từ SharedPreferences
+    }
+
+    public void setUserStatus(int status) {
+        editor.putInt("userStatus", status);
+        editor.commit(); // hoặc dùng apply() nếu bạn muốn ghi bất đồng bộ
+        Log.d(TAG, "User status updated to: " + status);
     }
 
     public void saveProfileImage(String profileImage) {

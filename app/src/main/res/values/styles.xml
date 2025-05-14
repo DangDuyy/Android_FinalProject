@@ -13,4 +13,9 @@
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
         <item name="android:statusBarColor">@color/background_dark</item>
     </style>
+    <style name="PopupMenuDark" parent="ThemeOverlay.AppCompat.Dark">
+        <item name="android:popupBackground">#000000</item> <!-- màu nền -->
+        <item name="android:textColor">#FFFFFF</item>       <!-- màu chữ -->
+    </style>
+
 </resources> 

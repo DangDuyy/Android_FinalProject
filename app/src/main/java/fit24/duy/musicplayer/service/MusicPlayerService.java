@@ -11,6 +11,8 @@ public class MusicPlayerService extends Service {
     private final IBinder binder = new LocalBinder();
     private MediaPlayer mediaPlayer;
 
+    private int userStatus;  // Biến lưu trữ thông tin người dùng
+
     public class LocalBinder extends Binder {
         public MusicPlayerService getService() {
             return MusicPlayerService.this;
@@ -20,6 +22,9 @@ public class MusicPlayerService extends Service {
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
+        if (intent != null) {
+            userStatus = intent.getIntExtra("userStatus", -1);  // Lấy userStatus từ Intent
+        }
         return binder;
     }
 
@@ -50,6 +55,9 @@ public class MusicPlayerService extends Service {
         }
     }
 
+    public int getUserStatus() {
+        return userStatus;  // Trả về userStatus khi cần
+    }
     public void stop() {
         if (mediaPlayer != null) {
             mediaPlayer.stop();
