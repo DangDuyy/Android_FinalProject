@@ -16,6 +16,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.card.MaterialCardView;
 import fit24.duy.musicplayer.R;
 import fit24.duy.musicplayer.models.Song;
+import fit24.duy.musicplayer.utils.QueueManager;
+
 import java.util.List;
 
 public class QueueDialog extends DialogFragment {
@@ -45,6 +47,8 @@ public class QueueDialog extends DialogFragment {
         setStyle(DialogFragment.STYLE_NORMAL, R.style.FullScreenDialog);
     }
 
+    private QueueAdapter adapter;
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -57,11 +61,22 @@ public class QueueDialog extends DialogFragment {
         TextView titleText = view.findViewById(R.id.title_text);
         titleText.setText("Queue");
 
+        // Luôn random queue mới nhất từ backend mỗi lần mở dialog
+        QueueManager queueManager = QueueManager.getInstance(requireContext());
+        queueManager.fillQueueWithRandomSongsFromApi(10);
+
         // Set up RecyclerView
         RecyclerView recyclerView = view.findViewById(R.id.queue_recycler_view);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        QueueAdapter adapter = new QueueAdapter(queue, currentIndex);
+        adapter = new QueueAdapter(queueManager.getQueue(), queueManager.getCurrentIndex());
         recyclerView.setAdapter(adapter);
+
+        // Lắng nghe sự thay đổi queue để cập nhật adapter
+        queueManager.setOnQueueChangeListener((newQueue, newCurrentIndex) -> {
+            adapter.songs = newQueue;
+            adapter.currentIndex = newCurrentIndex;
+            adapter.notifyDataSetChanged();
+        });
 
         return view;
     }

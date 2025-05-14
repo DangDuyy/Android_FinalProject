@@ -51,7 +51,7 @@ public class PlayerActivity extends AppCompatActivity {
     private static final String TAG = "PlayerActivity";
     private static final int PERMISSION_REQUEST_CODE = 123;
     
-    private ImageButton btnPlayPause, btnNext, btnPrev, btnShuffle, btnRepeat, btnMenu, btnLike;
+    private ImageButton btnPlayPause, btnNext, btnPrev, btnMenu, btnLike, btnBack;
     private SeekBar seekBar;
     private TextView tvCurrentTime, tvDuration;
     private ImageView imgAlbumArt;
@@ -79,6 +79,8 @@ public class PlayerActivity extends AppCompatActivity {
     };
     private int currentColorIndex = 0;
 
+    private android.media.MediaPlayer mediaPlayer;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -103,14 +105,26 @@ public class PlayerActivity extends AppCompatActivity {
         }
 
         updateSongInfoAndSeekBar();
+
+        // Lấy song_id từ Intent
+        long songId = getIntent().getLongExtra("song_id", -1);
+        if (songId == -1) {
+            Toast.makeText(this, "Invalid song", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+
+        // Gọi API lấy thông tin bài hát
+        fetchSongInfo(songId);
+
+        btnBack = findViewById(R.id.btn_back);
+        btnBack.setOnClickListener(v -> finish());
     }
 
     private void initializeViews() {
         btnPlayPause = findViewById(R.id.btn_play_pause);
         btnNext = findViewById(R.id.btn_next);
         btnPrev = findViewById(R.id.btn_prev);
-        btnShuffle = findViewById(R.id.btn_shuffle);
-        btnRepeat = findViewById(R.id.btn_repeat);
         seekBar = findViewById(R.id.seekBar);
         tvCurrentTime = findViewById(R.id.tv_current_time);
         tvDuration = findViewById(R.id.tv_duration);
@@ -143,30 +157,25 @@ public class PlayerActivity extends AppCompatActivity {
 
     private void setupClickListeners() {
         btnPlayPause.setOnClickListener(v -> {
-            MediaPlayer mediaPlayer = queueManager.getMediaPlayer();
-            if (mediaPlayer.isPlaying()) {
-                queueManager.pause();
-            } else {
-                queueManager.play();
+            if (mediaPlayer != null) {
+                if (mediaPlayer.isPlaying()) {
+                    mediaPlayer.pause();
+                    btnPlayPause.setImageResource(R.drawable.ic_play);
+                } else {
+                    mediaPlayer.start();
+                    btnPlayPause.setImageResource(R.drawable.ic_pause);
+                }
             }
-            updatePlayPauseButton();
         });
-        
+
         btnNext.setOnClickListener(v -> {
-            queueManager.playNext();
-            updateSongInfoAndSeekBar();
-            updatePlayPauseButton();
+            Toast.makeText(this, "Next song feature coming soon", Toast.LENGTH_SHORT).show();
         });
-        
+
         btnPrev.setOnClickListener(v -> {
-            queueManager.playPrevious();
-            updateSongInfoAndSeekBar();
-            updatePlayPauseButton();
+            Toast.makeText(this, "Previous song feature coming soon", Toast.LENGTH_SHORT).show();
         });
-        
-        btnShuffle.setOnClickListener(v -> toggleShuffle());
-        btnRepeat.setOnClickListener(v -> toggleRepeat());
-        
+
         if (btnMenu != null) {
             btnMenu.setOnClickListener(v -> {
                 Intent intent = new Intent(PlayerActivity.this, SongControlActivity.class);
@@ -180,7 +189,7 @@ public class PlayerActivity extends AppCompatActivity {
                 startActivity(intent);
             });
         }
-        
+
         if (btnLike != null) {
             btnLike.setOnClickListener(v -> {
                 if (isLiked) {
@@ -190,16 +199,13 @@ public class PlayerActivity extends AppCompatActivity {
                 }
             });
         }
-        
+
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if (fromUser) {
-                    MediaPlayer mediaPlayer = queueManager.getMediaPlayer();
-                    if (mediaPlayer != null) {
-                        mediaPlayer.seekTo(progress);
-                        tvCurrentTime.setText(formatTime(progress));
-                    }
+                if (fromUser && mediaPlayer != null) {
+                    mediaPlayer.seekTo(progress);
+                    tvCurrentTime.setText(formatTime(progress));
                 }
             }
             @Override
@@ -207,12 +213,10 @@ public class PlayerActivity extends AppCompatActivity {
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {}
         });
-        
+
         btnPlayPause.bringToFront();
         btnNext.bringToFront();
         btnPrev.bringToFront();
-        btnShuffle.bringToFront();
-        btnRepeat.bringToFront();
     }
 
     private void updatePlayPauseButton() {
@@ -256,17 +260,6 @@ public class PlayerActivity extends AppCompatActivity {
             }
         };
         handler.post(updateSeekBarRunnable);
-    }
-
-    private void toggleRepeat() {
-        isRepeat = !isRepeat;
-        btnRepeat.setAlpha(isRepeat ? 1.0f : 0.5f);
-        queueManager.setRepeatMode(isRepeat);
-    }
-
-    private void toggleShuffle() {
-        // TODO: Implement shuffle logic
-        Toast.makeText(this, "Shuffle feature coming soon", Toast.LENGTH_SHORT).show();
     }
 
     private String formatTime(int milliseconds) {
@@ -384,5 +377,51 @@ public class PlayerActivity extends AppCompatActivity {
         super.onResume();
         updateSongInfoAndSeekBar();
         checkSongLiked();
+    }
+
+    private void fetchSongInfo(long songId) {
+        ApiService apiService = ApiClient.getClient().create(ApiService.class);
+        apiService.getSongById(songId).enqueue(new retrofit2.Callback<Song>() {
+            @Override
+            public void onResponse(retrofit2.Call<Song> call, retrofit2.Response<Song> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    Song song = response.body();
+                    Log.d("PlayerActivity", "API filePath: " + song.getFilePath());
+                    tvSongTitle.setText(song.getTitle());
+                    tvArtist.setText(song.getArtist() != null ? song.getArtist().getName() : "Unknown Artist");
+                    Glide.with(PlayerActivity.this)
+                        .load(fit24.duy.musicplayer.utils.UrlUtils.getImageUrl(song.getCoverImage()))
+                        .centerCrop()
+                        .into(imgAlbumArt);
+                    playSong(song.getFilePath());
+                } else {
+                    Toast.makeText(PlayerActivity.this, "Failed to load song info", Toast.LENGTH_SHORT).show();
+                }
+            }
+            @Override
+            public void onFailure(retrofit2.Call<Song> call, Throwable t) {
+                Toast.makeText(PlayerActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void playSong(String filePath) {
+        try {
+            String fullUrl = UrlUtils.getAudioUrl(filePath);
+            Log.d("PlayerActivity", "Full audio URL: " + fullUrl);
+            if (mediaPlayer == null) mediaPlayer = new android.media.MediaPlayer();
+            mediaPlayer.reset();
+            mediaPlayer.setDataSource(fullUrl);
+            mediaPlayer.prepare();
+            mediaPlayer.start();
+            btnPlayPause.setImageResource(R.drawable.ic_pause);
+            int duration = mediaPlayer.getDuration();
+            seekBar.setMax(duration);
+            tvDuration.setText(formatTime(duration));
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.e("PlayerActivity", "Play error: " + e.getMessage());
+            Toast.makeText(this, "Cannot play this song: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
     }
 }

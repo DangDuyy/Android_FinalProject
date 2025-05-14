@@ -12,7 +12,7 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:defaultNavHost="true"
-        app:layout_constraintBottom_toTopOf="@id/bottom_navigation"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -38,12 +38,5 @@
         app:title="Music Player"
         app:titleTextColor="@android:color/white"
         tools:ignore="MissingConstraints" />
-
-    <include
-        android:id="@+id/playerBar"
-        layout="@layout/player_bar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintBottom_toTopOf="@id/bottom_navigation"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

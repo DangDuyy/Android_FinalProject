@@ -53,8 +53,6 @@ public class PlayerActivity extends AppCompatActivity {
         seekBar = findViewById(R.id.seekBar);
         currentTimeText = findViewById(R.id.tv_current_time);
         totalTimeText = findViewById(R.id.tv_duration);
-        btnShuffle = findViewById(R.id.btn_shuffle);
-        btnRepeat = findViewById(R.id.btn_repeat);
         btnPrevious = findViewById(R.id.btn_prev);
         btnNext = findViewById(R.id.btn_next);
         btnPlayPause = findViewById(R.id.btn_play_pause);

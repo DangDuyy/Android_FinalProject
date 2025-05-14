@@ -153,65 +153,44 @@
         app:layout_constraintEnd_toEndOf="@id/seekBar"
         android:layout_marginTop="4dp"/>
 
-    <!-- Control Buttons Row: shuffle, prev, play, next, repeat -->
+    <!-- Control Buttons Row: prev, play, next -->
     <LinearLayout
         android:id="@+id/layout_controls"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center"
         app:layout_constraintTop_toBottomOf="@id/tv_current_time"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="24dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp">
-
-        <ImageButton
-            android:id="@+id/btn_shuffle"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:background="@android:color/transparent"
-            android:src="@drawable/ic_shuffle"
-            android:tint="#fff"
-            android:layout_marginEnd="16dp"/>
+        android:layout_marginTop="24dp">
 
         <ImageButton
             android:id="@+id/btn_prev"
-            android:layout_width="48dp"
+            android:layout_width="0dp"
             android:layout_height="48dp"
+            android:layout_weight="1"
             android:background="@android:color/transparent"
             android:src="@drawable/ic_prev"
-            android:tint="#fff"
-            android:layout_marginEnd="16dp"/>
+            android:tint="#fff"/>
 
         <ImageButton
             android:id="@+id/btn_play_pause"
-            android:layout_width="64dp"
+            android:layout_width="0dp"
             android:layout_height="64dp"
-            android:background="@drawable/play_button_bg"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
             android:src="@drawable/ic_play"
-            android:tint="#fff"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"/>
+            android:tint="#fff"/>
 
         <ImageButton
             android:id="@+id/btn_next"
-            android:layout_width="48dp"
+            android:layout_width="0dp"
             android:layout_height="48dp"
+            android:layout_weight="1"
             android:background="@android:color/transparent"
             android:src="@drawable/ic_next"
-            android:tint="#fff"
-            android:layout_marginStart="16dp"/>
-
-        <ImageButton
-            android:id="@+id/btn_repeat"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:background="@android:color/transparent"
-            android:src="@drawable/ic_repeat"
-            android:tint="#fff"
-            android:layout_marginStart="16dp"/>
+            android:tint="#fff"/>
     </LinearLayout>
 
     <fit24.duy.musicplayer.visualizer.MusicVisualizerView
