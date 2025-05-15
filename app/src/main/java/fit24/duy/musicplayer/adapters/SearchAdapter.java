@@ -1,12 +1,14 @@
 package fit24.duy.musicplayer.adapters;
 
 import android.content.Context;
+import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -115,7 +117,7 @@ public class SearchAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         }
     }
 
-    class ArtistViewHolder extends RecyclerView.ViewHolder {
+    static class ArtistViewHolder extends RecyclerView.ViewHolder {
         TextView tvName;
         ImageView imgArtist;
 
@@ -123,12 +125,6 @@ public class SearchAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
             super(itemView);
             tvName = itemView.findViewById(R.id.tv_name);
             imgArtist = itemView.findViewById(R.id.img_artist);
-
-            itemView.setOnClickListener(v -> {
-                if (onItemClickListener != null) {
-                    onItemClickListener.onItemClick(results.get(getAdapterPosition()));
-                }
-            });
         }
 
         public void bind(Artist artist) {
@@ -141,10 +137,18 @@ public class SearchAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
                     .error(R.drawable.default_avatar)
                     .circleCrop()
                     .into(imgArtist);
+
+            itemView.setOnClickListener(v -> {
+                Bundle bundle = new Bundle();
+                bundle.putString("artist_name", artist.getName());
+                bundle.putString("artist_image", artist.getProfileImage());
+                bundle.putLong("artist_id", artist.getId());
+                Navigation.findNavController(itemView).navigate(R.id.navigation_artist, bundle);
+            });
         }
     }
 
-    class AlbumViewHolder extends RecyclerView.ViewHolder {
+    static class AlbumViewHolder extends RecyclerView.ViewHolder {
         TextView tvTitle;
         ImageView imgAlbum;
 
@@ -152,12 +156,6 @@ public class SearchAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
             super(itemView);
             tvTitle = itemView.findViewById(R.id.tv_title);
             imgAlbum = itemView.findViewById(R.id.img_album);
-
-            itemView.setOnClickListener(v -> {
-                if (onItemClickListener != null) {
-                    onItemClickListener.onItemClick(results.get(getAdapterPosition()));
-                }
-            });
         }
 
         public void bind(Album album) {
@@ -170,6 +168,19 @@ public class SearchAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
                     .error(R.drawable.album_placeholder)
                     .centerCrop()
                     .into(imgAlbum);
+
+            itemView.setOnClickListener(v -> {
+                Bundle bundle = new Bundle();
+                bundle.putString("album_title", album.getTitle());
+                bundle.putString("album_image", album.getCoverImage());
+                bundle.putLong("album_id", album.getId());
+                // truyền thông tin nghệ sĩ
+                bundle.putLong("artist_id", album.getArtist().getId());
+                bundle.putString("artist_name", album.getArtist().getName());
+                bundle.putString("artist_image", album.getArtist().getProfileImage());
+
+                Navigation.findNavController(itemView).navigate(R.id.navigation_album, bundle);
+            });
         }
     }
 }

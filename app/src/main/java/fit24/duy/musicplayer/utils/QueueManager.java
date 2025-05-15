@@ -1,17 +1,13 @@
 package fit24.duy.musicplayer.utils;
 
-import android.content.ContentResolver;
 import android.content.Context;
-import android.database.Cursor;
 import android.media.MediaPlayer;
-import android.provider.MediaStore;
 import android.util.Log;
+import android.widget.Toast;
+
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Random;
-import java.util.HashSet;
-import java.util.Set;
+
 import fit24.duy.musicplayer.models.Song;
 import fit24.duy.musicplayer.api.ApiService;
 import fit24.duy.musicplayer.api.ApiClient;
@@ -33,12 +29,19 @@ public class QueueManager {
     private MediaPlayer mediaPlayer;
     private boolean isRepeat;
 
+    // --- Interface để lắng nghe thay đổi queue ---
     public interface OnQueueChangeListener {
         void onQueueChanged(List<Song> queue, int currentIndex);
     }
 
+    // --- Interface để lắng nghe trạng thái phát nhạc ---
     public interface PlaybackStateListener {
         void onPlaybackStateChanged(boolean isPlaying);
+    }
+
+    // --- Interface callback lấy bài hát ngẫu nhiên (bất đồng bộ) ---
+    public interface RandomSongCallback {
+        void onSongFetched(Song song);
     }
 
     private QueueManager(Context context) {
@@ -80,9 +83,9 @@ public class QueueManager {
             Log.e(TAG, "Cannot add null song to queue");
             return;
         }
-        
+
         Log.d(TAG, "Adding song to queue: " + song.getTitle());
-        
+
         if (queue.size() >= MAX_QUEUE_SIZE) {
             Song removedSong = queue.remove(0);
             Log.d(TAG, "Queue full, removing oldest song: " + removedSong.getTitle());
@@ -116,31 +119,28 @@ public class QueueManager {
         return null;
     }
 
-    public Song getNextSong() {
-        if (currentIndex + 1 < queue.size()) {
-            return queue.get(currentIndex + 1);
-        }
-        return fetchRandomSong();
-    }
-
-    public Song getPreviousSong() {
-        if (currentIndex > 0) {
-            return queue.get(currentIndex - 1);
-        }
-        return null;
-    }
+    // Chú ý: Không thể trả về Song trực tiếp vì fetchRandomSong bất đồng bộ
+    // Bạn nên tạo hàm lấy bài hát kế tiếp theo callback hoặc gọi playNext()
 
     public void moveToNext() {
         if (currentIndex + 1 < queue.size()) {
             currentIndex++;
+            notifyQueueChanged();
         } else {
-            Song nextSong = fetchRandomSong();
-            if (nextSong != null) {
-                addSong(nextSong);
-                currentIndex = queue.size() - 1;
-            }
+            // Lấy bài hát ngẫu nhiên bất đồng bộ
+            fetchRandomSong(new RandomSongCallback() {
+                @Override
+                public void onSongFetched(Song song) {
+                    if (song != null) {
+                        addSong(song);
+                        currentIndex = queue.size() - 1;
+                        notifyQueueChanged();
+                    } else {
+                        Log.e(TAG, "Không lấy được bài hát ngẫu nhiên");
+                    }
+                }
+            });
         }
-        notifyQueueChanged();
     }
 
     public void moveToPrevious() {
@@ -150,29 +150,30 @@ public class QueueManager {
         }
     }
 
-    private Song fetchRandomSong() {
+    // Hàm lấy bài hát ngẫu nhiên từ API với callback
+    private void fetchRandomSong(RandomSongCallback callback) {
         ApiService apiService = ApiClient.getClient().create(ApiService.class);
-        Call<List<Song>> call = apiService.getRandomSongs(1); // Lấy 1 bài hát ngẫu nhiên
-        final Song[] randomSong = {null};
+        Call<List<Song>> call = apiService.getRandomSongs(1);
 
         call.enqueue(new Callback<List<Song>>() {
             @Override
             public void onResponse(Call<List<Song>> call, Response<List<Song>> response) {
                 if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
-                    randomSong[0] = response.body().get(0); // Lấy bài hát đầu tiên
+                    callback.onSongFetched(response.body().get(0));
                 } else {
                     Log.e(TAG, "Không có bài hát nào từ API");
+                    callback.onSongFetched(null);
                 }
             }
 
             @Override
             public void onFailure(Call<List<Song>> call, Throwable t) {
                 Log.e(TAG, "Lỗi khi gọi API lấy bài hát ngẫu nhiên", t);
+                callback.onSongFetched(null);
             }
         });
-
-        return randomSong[0];
     }
+
     private void notifyQueueChanged() {
         if (queueChangeListener != null) {
             queueChangeListener.onQueueChanged(queue, currentIndex);
@@ -203,6 +204,15 @@ public class QueueManager {
                     notifyQueueChanged();
                 } else {
                     Log.e(TAG, "API không trả về danh sách bài hát");
+                    Log.e(TAG, "Response code: " + response.code());
+                    Log.e(TAG, "Response message: " + response.message());
+                    try {
+                        if (response.errorBody() != null) {
+                            Log.e(TAG, "Error body: " + response.errorBody().string());
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Lỗi khi đọc errorBody", e);
+                    }
                 }
             }
 
@@ -212,6 +222,7 @@ public class QueueManager {
             }
         });
     }
+
 
     public void setCurrentIndex(int index) {
         if (index >= 0 && index < queue.size()) {
@@ -236,9 +247,12 @@ public class QueueManager {
         if (currentIndex >= 0 && currentIndex < queue.size()) {
             try {
                 Song song = queue.get(currentIndex);
-                mediaPlayer.reset();
-                mediaPlayer.setDataSource(song.getFilePath());
+                mediaPlayer.reset(); // Reset MediaPlayer để đảm bảo trạng thái sạch
+                String audioUrl = UrlUtils.getAudioUrl(song.getFilePath());
+                Log.d(TAG, "Playing song: " + song.getTitle() + ", URL: " + audioUrl);
+                mediaPlayer.setDataSource(audioUrl);
                 mediaPlayer.setOnPreparedListener(mp -> {
+                    Log.d(TAG, "MediaPlayer prepared, duration: " + mp.getDuration());
                     mp.start();
                     setPlaying(true);
                     notifyQueueChanged();
@@ -246,10 +260,28 @@ public class QueueManager {
                         playbackStateListener.onPlaybackStateChanged(true);
                     }
                 });
+                mediaPlayer.setOnCompletionListener(mp -> {
+                    Log.d(TAG, "Song completed, playing next");
+                    playNext();
+                });
+                mediaPlayer.setOnErrorListener((mp, what, extra) -> {
+                    Log.e(TAG, "MediaPlayer error: what=" + what + ", extra=" + extra);
+                    Toast.makeText(context, "Cannot play this song, trying next", Toast.LENGTH_SHORT).show();
+                    // Reset MediaPlayer và thử bài tiếp theo
+                    mediaPlayer.reset();
+                    playNext();
+                    return true;
+                });
                 mediaPlayer.prepareAsync();
             } catch (Exception e) {
-                e.printStackTrace();
+                Log.e(TAG, "Play error: " + e.getMessage() + ", URL: ", e);
+                Toast.makeText(context, "Cannot play this song: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                // Reset MediaPlayer và thử bài tiếp theo
+                mediaPlayer.reset();
+                playNext();
             }
+        } else {
+            Log.w(TAG, "Invalid currentIndex: " + currentIndex + ", queue size: " + queue.size());
         }
     }
 
@@ -293,6 +325,7 @@ public class QueueManager {
             mediaPlayer.seekTo(position);
         }
     }
+
     public void playSongAt(int position) {
         if (position >= 0 && position < queue.size()) {
             currentIndex = position;
@@ -309,7 +342,8 @@ public class QueueManager {
             notifyQueueChanged();
         }
     }
+
     public MediaPlayer getMediaPlayer() {
         return mediaPlayer;
     }
-} 
+}

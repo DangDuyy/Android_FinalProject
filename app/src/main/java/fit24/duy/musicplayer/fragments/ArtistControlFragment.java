@@ -103,12 +103,8 @@ public class ArtistControlFragment extends Fragment {
             Toast.makeText(requireContext(), "Đã nhấn Share", Toast.LENGTH_SHORT).show();
         });
 
-        view.findViewById(R.id.option_add_to_queue).setOnClickListener(v -> {
-            Toast.makeText(requireContext(), "Đã nhấn Add to queue", Toast.LENGTH_SHORT).show();
-        });
-
-        view.findViewById(R.id.option_go_to_radio).setOnClickListener(v -> {
-            Toast.makeText(requireContext(), "Đã nhấn Go to radio", Toast.LENGTH_SHORT).show();
+        view.findViewById(R.id.option_report).setOnClickListener(v -> {
+            Toast.makeText(requireContext(), "Đã nhấn Report", Toast.LENGTH_SHORT).show();
         });
 
         // Nút Close

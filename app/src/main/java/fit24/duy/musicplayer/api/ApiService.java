@@ -104,7 +104,7 @@ public interface ApiService {
     @GET("songs/search")
     Call<List<Song>> searchSongs(@Query("title") String title);
 
-    @GET("/songs/random")
+    @GET("songs/random")
     Call<List<Song>> getRandomSongs(@Query("count") int count);
 
     @POST("songs/{songId}/like")
