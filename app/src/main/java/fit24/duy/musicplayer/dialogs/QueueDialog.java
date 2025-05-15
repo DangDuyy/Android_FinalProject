@@ -1,24 +1,25 @@
 package fit24.duy.musicplayer.dialogs;
 
-import android.app.Dialog;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
 import android.widget.ImageButton;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.google.android.material.card.MaterialCardView;
+
+import java.util.List;
+
 import fit24.duy.musicplayer.R;
 import fit24.duy.musicplayer.models.Song;
 import fit24.duy.musicplayer.utils.QueueManager;
-
-import java.util.List;
 
 public class QueueDialog extends DialogFragment {
     private List<Song> queue;
@@ -41,40 +42,42 @@ public class QueueDialog extends DialogFragment {
         this.listener = listener;
     }
 
+    private QueueAdapter adapter;
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setStyle(DialogFragment.STYLE_NORMAL, R.style.FullScreenDialog);
     }
 
-    private QueueAdapter adapter;
-
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater,
+                             @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.dialog_queue, container, false);
 
-        // Set up toolbar
+        // Toolbar setup
         ImageButton closeButton = view.findViewById(R.id.btn_close);
         closeButton.setOnClickListener(v -> dismiss());
 
         TextView titleText = view.findViewById(R.id.title_text);
         titleText.setText("Queue");
 
-        // Luôn random queue mới nhất từ backend mỗi lần mở dialog
-        QueueManager queueManager = QueueManager.getInstance(requireContext());
-        queueManager.fillQueueWithRandomSongs(10);
-
-        // Set up RecyclerView
+        // Setup RecyclerView
         RecyclerView recyclerView = view.findViewById(R.id.queue_recycler_view);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        adapter = new QueueAdapter(queueManager.getQueue(), queueManager.getCurrentIndex());
+
+        // Use queue & currentIndex passed from outside (do NOT call fillQueue here)
+        adapter = new QueueAdapter(queue, currentIndex);
         recyclerView.setAdapter(adapter);
 
-        // Update adapter when queue changes
+        // Listen for queue changes and update adapter
         QueueManager.getInstance(requireContext()).setOnQueueChangeListener((newQueue, newCurrentIndex) -> {
             queue = newQueue;
             currentIndex = newCurrentIndex;
+            adapter.songs = newQueue;
+            adapter.currentIndex = newCurrentIndex;
             adapter.notifyDataSetChanged();
         });
 
@@ -103,17 +106,17 @@ public class QueueDialog extends DialogFragment {
             Song song = songs.get(position);
             holder.songTitle.setText(song.getTitle());
             holder.artistName.setText(song.getArtist() != null ? song.getArtist().getName() : "Unknown Artist");
-            
+
             // Highlight current song
             holder.itemView.setAlpha(position == currentIndex ? 1.0f : 0.7f);
-            holder.cardView.setCardBackgroundColor(position == currentIndex ? 
-                getContext().getColor(R.color.purple_500) : 
-                getContext().getColor(R.color.white));
+            holder.cardView.setCardBackgroundColor(position == currentIndex ?
+                    getContext().getColor(R.color.purple_500) :
+                    getContext().getColor(R.color.white));
 
             holder.itemView.setOnClickListener(v -> {
                 if (listener != null) {
-                    listener.onItemClick(position); // Gọi callback onItemClick
-                    dismiss(); // Đóng dialog sau khi chọn bài hát
+                    listener.onItemClick(position);
+                    dismiss();
                 }
             });
         }
@@ -133,14 +136,7 @@ public class QueueDialog extends DialogFragment {
                 cardView = itemView.findViewById(R.id.card_view);
                 songTitle = itemView.findViewById(R.id.song_title);
                 artistName = itemView.findViewById(R.id.artist_name);
-
-                itemView.setOnClickListener(v -> {
-                    int position = getAdapterPosition();
-                    if (position != RecyclerView.NO_POSITION && listener != null) {
-                        listener.onItemClick(position);
-                    }
-                });
             }
         }
     }
-} 
+}

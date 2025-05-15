@@ -45,7 +45,7 @@ import android.widget.PopupMenu;
 public class PlayerActivity extends AppCompatActivity {
     private static final String TAG = "PlayerActivity";
     private static final int PERMISSION_REQUEST_CODE = 123;
-    
+
     private ImageButton btnPlayPause, btnNext, btnPrev, btnMenu, btnLike, btnBack, btnQueue;
     private SeekBar seekBar;
     private TextView tvCurrentTime, tvDuration, tvLyrics;
@@ -71,15 +71,13 @@ public class PlayerActivity extends AppCompatActivity {
         Toast.makeText(this, "Downloading song...", Toast.LENGTH_SHORT).show();
     }
     private int[] colors = {
-        android.graphics.Color.parseColor("#FF6B6B"),
-        android.graphics.Color.parseColor("#4ECDC4"),
-        android.graphics.Color.parseColor("#45B7D1"),
-        android.graphics.Color.parseColor("#96CEB4"),
-        android.graphics.Color.parseColor("#FFEEAD")
+            android.graphics.Color.parseColor("#FF6B6B"),
+            android.graphics.Color.parseColor("#4ECDC4"),
+            android.graphics.Color.parseColor("#45B7D1"),
+            android.graphics.Color.parseColor("#96CEB4"),
+            android.graphics.Color.parseColor("#FFEEAD")
     };
     private int currentColorIndex = 0;
-
-    private android.media.MediaPlayer mediaPlayer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -107,7 +105,7 @@ public class PlayerActivity extends AppCompatActivity {
         updateSongInfoAndSeekBar();
 
         // Lấy song_id từ Intent
-        long songId = getIntent().getLongExtra("song_id", -1);
+        songId = getIntent().getLongExtra("song_id", -1);
         if (songId == -1) {
             Toast.makeText(this, "Invalid song", Toast.LENGTH_SHORT).show();
             finish();
@@ -156,32 +154,37 @@ public class PlayerActivity extends AppCompatActivity {
             finish();
             return;
         }
-
-        if (mediaPlayer != null && mediaPlayer.isPlaying()) {
-            initializeVisualizer();
-        } else {
-            Log.e(TAG, "MediaPlayer chưa phát nhạc. Visualizer không thể khởi động.");
-        }
     }
 
     private void setupClickListeners() {
         btnPrev.setOnClickListener(v -> {
-            Toast.makeText(this, "Previous song feature coming soon", Toast.LENGTH_SHORT).show();
+            queueManager.playPrevious();
+            updateSongInfoAndSeekBar();
         });
+
         btnPlayPause.setOnClickListener(v -> {
+            MediaPlayer mediaPlayer = queueManager.getMediaPlayer();
             if (mediaPlayer != null) {
                 if (mediaPlayer.isPlaying()) {
-                    mediaPlayer.pause();
+                    queueManager.pause();
                     btnPlayPause.setImageResource(R.drawable.ic_play);
                 } else {
-                    mediaPlayer.start();
+                    queueManager.play();
                     btnPlayPause.setImageResource(R.drawable.ic_pause);
                 }
             }
         });
 
         btnNext.setOnClickListener(v -> {
-            Toast.makeText(this, "Next song feature coming soon", Toast.LENGTH_SHORT).show();
+            queueManager.playNext();
+            updateSongInfoAndSeekBar();
+        });
+
+        btnQueue.setOnClickListener(v -> {
+            if (queueManager.getQueue().isEmpty()) {
+                queueManager.fillQueueWithRandomSongs(10);
+            }
+            openQueueDialog();
         });
 
         if (btnMenu != null) {
@@ -219,9 +222,18 @@ public class PlayerActivity extends AppCompatActivity {
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if (fromUser && mediaPlayer != null) {
-                    mediaPlayer.seekTo(progress);
-                    tvCurrentTime.setText(formatTime(progress));
+                if (fromUser) {
+                    MediaPlayer mediaPlayer = queueManager.getMediaPlayer();
+                    if (mediaPlayer != null && (mediaPlayer.isPlaying() || mediaPlayer.getCurrentPosition() > 0)) {
+                        try {
+                            mediaPlayer.seekTo(progress);
+                            tvCurrentTime.setText(formatTime(progress));
+                        } catch (IllegalStateException e) {
+                            Log.e(TAG, "Cannot seek, MediaPlayer not prepared", e);
+                        }
+                    } else {
+                        Log.w(TAG, "Cannot seek, MediaPlayer not ready");
+                    }
                 }
             }
             @Override
@@ -229,6 +241,7 @@ public class PlayerActivity extends AppCompatActivity {
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {}
         });
+
         btnPrev.bringToFront();
         btnPlayPause.bringToFront();
         btnNext.bringToFront();
@@ -272,12 +285,42 @@ public class PlayerActivity extends AppCompatActivity {
             tvArtist.setText(song.getArtist() != null ? song.getArtist().getName() : "Unknown Artist");
             String imageUrl = UrlUtils.getImageUrl(song.getCoverImage());
             Glide.with(this)
-                .load(imageUrl)
-                .centerCrop()
-                .into(imgAlbumArt);
-            seekBar.setMax(mediaPlayer.getDuration());
-            tvDuration.setText(formatTime(mediaPlayer.getDuration()));
-            updateSeekBar();
+                    .load(imageUrl)
+                    .centerCrop()
+                    .into(imgAlbumArt);
+
+            // Kiểm tra trạng thái MediaPlayer
+            try {
+                if (mediaPlayer.isPlaying() || mediaPlayer.getCurrentPosition() > 0) {
+                    seekBar.setMax(mediaPlayer.getDuration());
+                    tvDuration.setText(formatTime(mediaPlayer.getDuration()));
+                    seekBar.setEnabled(true); // Kích hoạt seekBar
+                    updateSeekBar();
+                } else {
+                    // Đợi MediaPlayer sẵn sàng
+                    mediaPlayer.setOnPreparedListener(mp -> {
+                        seekBar.setMax(mp.getDuration());
+                        tvDuration.setText(formatTime(mp.getDuration()));
+                        seekBar.setEnabled(true); // Kích hoạt seekBar
+                        mp.start();
+                        updateSeekBar();
+                        btnPlayPause.setImageResource(R.drawable.ic_pause);
+                    });
+                }
+            } catch (IllegalStateException e) {
+                Log.e(TAG, "MediaPlayer not prepared yet", e);
+                mediaPlayer.setOnPreparedListener(mp -> {
+                    seekBar.setMax(mp.getDuration());
+                    tvDuration.setText(formatTime(mp.getDuration()));
+                    seekBar.setEnabled(true); // Kích hoạt seekBar
+                    mp.start();
+                    updateSeekBar();
+                    btnPlayPause.setImageResource(R.drawable.ic_pause);
+                });
+            }
+            btnPlayPause.setImageResource(mediaPlayer.isPlaying() ? R.drawable.ic_pause : R.drawable.ic_play);
+        } else {
+            seekBar.setEnabled(false); // Vô hiệu hóa seekBar nếu không có bài hát
         }
     }
 
@@ -285,15 +328,19 @@ public class PlayerActivity extends AppCompatActivity {
         if (updateSeekBarRunnable != null) {
             handler.removeCallbacks(updateSeekBarRunnable);
         }
-        
+
         updateSeekBarRunnable = new Runnable() {
             @Override
             public void run() {
                 MediaPlayer mediaPlayer = queueManager.getMediaPlayer();
                 if (mediaPlayer != null && mediaPlayer.isPlaying()) {
-                    int currentPosition = mediaPlayer.getCurrentPosition();
-                    seekBar.setProgress(currentPosition);
-                    tvCurrentTime.setText(formatTime(currentPosition));
+                    try {
+                        int currentPosition = mediaPlayer.getCurrentPosition();
+                        seekBar.setProgress(currentPosition);
+                        tvCurrentTime.setText(formatTime(currentPosition));
+                    } catch (IllegalStateException e) {
+                        Log.e(TAG, "Cannot update seekBar, MediaPlayer not ready", e);
+                    }
                 }
                 handler.postDelayed(this, 1000);
             }
@@ -319,7 +366,7 @@ public class PlayerActivity extends AppCompatActivity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                         @NonNull int[] grantResults) {
+                                           @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == PERMISSION_REQUEST_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -337,68 +384,85 @@ public class PlayerActivity extends AppCompatActivity {
     }
 
     private void checkSongLiked() {
-        Song currentSong = queueManager.getCurrentSong();
-        if (currentSong != null) {
-            apiService.isSongLiked(currentSong.getId(), userId).enqueue(new Callback<ApiResponse<Boolean>>() {
-                @Override
-                public void onResponse(Call<ApiResponse<Boolean>> call, Response<ApiResponse<Boolean>> response) {
-                    if (response.isSuccessful() && response.body() != null) {
-                        isLiked = response.body().getData();
-                        updateLikeButton();
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<ApiResponse<Boolean>> call, Throwable t) {
-                    Log.e(TAG, "Error checking if song is liked", t);
-                }
-            });
+        if (songId == null || userId == null) {
+            Toast.makeText(this, "Invalid song or user ID", Toast.LENGTH_SHORT).show();
+            return;
         }
+
+        Call<ApiResponse<Boolean>> call = apiService.isSongLiked(songId, userId);
+        call.enqueue(new Callback<ApiResponse<Boolean>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<Boolean>> call, Response<ApiResponse<Boolean>> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().getSuccess()) {
+                    isLiked = response.body().getData();
+                    btnLike.setImageResource(isLiked ? R.drawable.ic_heart_red : R.drawable.ic_heart);
+                } else {
+                    String errorMsg = response.body() != null ? response.body().getMessage() : response.message();
+                    Toast.makeText(PlayerActivity.this, "Failed to check like status: " + errorMsg, Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<Boolean>> call, Throwable t) {
+                Toast.makeText(PlayerActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void likeSong() {
-        Song currentSong = queueManager.getCurrentSong();
-        if (currentSong != null) {
-            apiService.likeSong(currentSong.getId(), userId).enqueue(new Callback<ApiResponse<String>>() {
-                @Override
-                public void onResponse(Call<ApiResponse<String>> call, Response<ApiResponse<String>> response) {
-                    if (response.isSuccessful() && response.body() != null) {
-                        isLiked = true;
-                        updateLikeButton();
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<ApiResponse<String>> call, Throwable t) {
-                    Log.e(TAG, "Error liking song", t);
-                }
-            });
+        if (songId == null || userId == null) {
+            Toast.makeText(this, "Invalid song or user ID", Toast.LENGTH_SHORT).show();
+            return;
         }
+
+        Call<ApiResponse<String>> call = apiService.likeSong(songId, userId);
+        call.enqueue(new Callback<ApiResponse<String>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<String>> call, Response<ApiResponse<String>> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().getSuccess()) {
+                    isLiked = true;
+                    btnLike.setImageResource(R.drawable.ic_heart_red);
+                    Toast.makeText(PlayerActivity.this, response.body().getMessage(), Toast.LENGTH_SHORT).show();
+                } else {
+                    String errorMsg = response.body() != null ? response.body().getMessage() : response.message();
+                    Toast.makeText(PlayerActivity.this, "Failed to like: " + errorMsg, Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<String>> call, Throwable t) {
+                Toast.makeText(PlayerActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void unlikeSong() {
-        Song currentSong = queueManager.getCurrentSong();
-        if (currentSong != null) {
-            apiService.unlikeSong(currentSong.getId(), userId).enqueue(new Callback<ApiResponse<String>>() {
-                @Override
-                public void onResponse(Call<ApiResponse<String>> call, Response<ApiResponse<String>> response) {
-                    if (response.isSuccessful() && response.body() != null) {
-                        isLiked = false;
-                        updateLikeButton();
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<ApiResponse<String>> call, Throwable t) {
-                    Log.e(TAG, "Error unliking song", t);
-                }
-            });
+        if (songId == null || userId == null) {
+            Toast.makeText(this, "Invalid song or user ID", Toast.LENGTH_SHORT).show();
+            return;
         }
+
+        Call<ApiResponse<String>> call = apiService.unlikeSong(songId, userId);
+        call.enqueue(new Callback<ApiResponse<String>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<String>> call, Response<ApiResponse<String>> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().getSuccess()) {
+                    isLiked = false;
+                    btnLike.setImageResource(R.drawable.ic_heart);
+                    Toast.makeText(PlayerActivity.this, response.body().getMessage(), Toast.LENGTH_SHORT).show();
+                } else {
+                    String errorMsg = response.body() != null ? response.body().getMessage() : response.message();
+                    Toast.makeText(PlayerActivity.this, "Failed to unlike: " + errorMsg, Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<String>> call, Throwable t) {
+                Toast.makeText(PlayerActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
-    private void updateLikeButton() {
-        btnLike.setImageResource(isLiked ? R.drawable.ic_heart_red : R.drawable.ic_heart);
-    }
 
     @Override
     protected void onDestroy() {
@@ -408,11 +472,6 @@ public class PlayerActivity extends AppCompatActivity {
         }
         if (visualizerService != null) {
             visualizerService.release();
-        }
-        if (mediaPlayer != null) {
-            mediaPlayer.stop();
-            mediaPlayer.release();
-            mediaPlayer = null;
         }
     }
     @Override
@@ -429,45 +488,34 @@ public class PlayerActivity extends AppCompatActivity {
             public void onResponse(retrofit2.Call<Song> call, retrofit2.Response<Song> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     Song song = response.body();
-                    Log.d("PlayerActivity", "API filePath: " + song.getFilePath());
+                    Log.d(TAG, "API filePath: " + song.getFilePath());
                     tvSongTitle.setText(song.getTitle());
                     tvArtist.setText(song.getArtist() != null ? song.getArtist().getName() : "Unknown Artist");
                     tvLyrics.setText(song.getLyrics());
                     Glide.with(PlayerActivity.this)
-                        .load(fit24.duy.musicplayer.utils.UrlUtils.getImageUrl(song.getCoverImage()))
-                        .centerCrop()
-                        .into(imgAlbumArt);
-                    playSong(song.getFilePath());
-
+                            .load(UrlUtils.getImageUrl(song.getCoverImage()))
+                            .centerCrop()
+                            .into(imgAlbumArt);
+                    queueManager.addSong(song);
+                    queueManager.setCurrentIndex(queueManager.getQueue().size() - 1);
+                    queueManager.play();
+                    // Cập nhật giao diện sau khi MediaPlayer sẵn sàng
+                    MediaPlayer mediaPlayer = queueManager.getMediaPlayer();
+                    if (mediaPlayer != null) {
+                        mediaPlayer.setOnPreparedListener(mp -> {
+                            updateSongInfoAndSeekBar();
+                        });
+                    }
                 } else {
                     Toast.makeText(PlayerActivity.this, "Failed to load song info", Toast.LENGTH_SHORT).show();
                 }
             }
+
             @Override
             public void onFailure(retrofit2.Call<Song> call, Throwable t) {
                 Toast.makeText(PlayerActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
-    }
-
-    private void playSong(String filePath) {
-        try {
-            String fullUrl = UrlUtils.getAudioUrl(filePath);
-            Log.d("PlayerActivity", "Full audio URL: " + fullUrl);
-            if (mediaPlayer == null) mediaPlayer = new android.media.MediaPlayer();
-            mediaPlayer.reset();
-            mediaPlayer.setDataSource(fullUrl);
-            mediaPlayer.prepare();
-            mediaPlayer.start();
-            btnPlayPause.setImageResource(R.drawable.ic_pause);
-            int duration = mediaPlayer.getDuration();
-            seekBar.setMax(duration);
-            tvDuration.setText(formatTime(duration));
-        } catch (Exception e) {
-            e.printStackTrace();
-            Log.e("PlayerActivity", "Play error: " + e.getMessage());
-            Toast.makeText(this, "Cannot play this song: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-        }
     }
 
     private void openQueueDialog() {
@@ -488,4 +536,55 @@ public class PlayerActivity extends AppCompatActivity {
         });
         dialog.show(getSupportFragmentManager(), "QueueDialog");
     }
+
+    private void updateUI(Song song) {
+        if (song == null) return;
+
+        tvSongTitle.setText(song.getTitle());
+        tvArtist.setText(song.getArtist() != null ? song.getArtist().getName() : "Unknown Artist");
+
+        String imageUrl = UrlUtils.getImageUrl(song.getCoverImage());
+        Glide.with(this)
+                .load(imageUrl)
+                .centerCrop()
+                .into(imgAlbumArt);
+
+        MediaPlayer mediaPlayer = queueManager.getMediaPlayer();
+        if (mediaPlayer != null) {
+            try {
+                if (mediaPlayer.isPlaying() || mediaPlayer.getCurrentPosition() > 0) {
+                    seekBar.setMax(mediaPlayer.getDuration());
+                    tvDuration.setText(formatTime(mediaPlayer.getDuration()));
+                    seekBar.setEnabled(true); // Kích hoạt seekBar
+                    updateSeekBar();
+                } else {
+                    mediaPlayer.setOnPreparedListener(mp -> {
+                        seekBar.setMax(mp.getDuration());
+                        tvDuration.setText(formatTime(mp.getDuration()));
+                        seekBar.setEnabled(true); // Kích hoạt seekBar
+                        mp.start();
+                        updateSeekBar();
+                        btnPlayPause.setImageResource(R.drawable.ic_pause);
+                    });
+                }
+            } catch (IllegalStateException e) {
+                Log.e(TAG, "MediaPlayer not prepared yet", e);
+                mediaPlayer.setOnPreparedListener(mp -> {
+                    seekBar.setMax(mp.getDuration());
+                    tvDuration.setText(formatTime(mp.getDuration()));
+                    seekBar.setEnabled(true); // Kích hoạt seekBar
+                    mp.start();
+                    updateSeekBar();
+                    btnPlayPause.setImageResource(R.drawable.ic_pause);
+                });
+            }
+            btnPlayPause.setImageResource(mediaPlayer.isPlaying() ? R.drawable.ic_pause : R.drawable.ic_play);
+        } else {
+            seekBar.setEnabled(false); // Vô hiệu hóa seekBar nếu không có MediaPlayer
+        }
+
+        songId = song.getId();
+        checkSongLiked();
+    }
+
 }
