@@ -39,9 +39,16 @@ import fit24.duy.musicplayer.models.ApiResponse;
 import fit24.duy.musicplayer.models.Song;
 import fit24.duy.musicplayer.utils.SessionManager;
 import fit24.duy.musicplayer.utils.UrlUtils;
+import fit24.duy.musicplayer.visualizer.MusicVisualizerView;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+
+import fit24.duy.musicplayer.dialogs.QueueDialog;
+import fit24.duy.musicplayer.visualizer.VisualizerService;
+import fit24.duy.musicplayer.utils.QueueManager;
+
+import java.util.List;
 
 public class PlayerActivity extends AppCompatActivity {
     private static final String TAG = "PlayerActivity";
@@ -62,6 +69,12 @@ public class PlayerActivity extends AppCompatActivity {
     private SessionManager sessionManager;
     private ApiService apiService;
     private Long userId, songId;
+
+
+    // Visualizer variables
+    private MusicVisualizerView visualizerView;
+    private VisualizerService visualizerService;
+    private boolean isWaveform = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,7 +101,7 @@ public class PlayerActivity extends AppCompatActivity {
 
         updateSongInfoAndSeekBar();
 
-        long songId = getIntent().getLongExtra("song_id", -1);
+        songId = getIntent().getLongExtra("song_id", -1);
         if (songId == -1) {
             Toast.makeText(this, "Invalid song", Toast.LENGTH_SHORT).show();
             finish();
@@ -123,6 +136,9 @@ public class PlayerActivity extends AppCompatActivity {
         tvSongTitle = findViewById(R.id.tv_song_title);
         tvArtist = findViewById(R.id.tv_artist);
         imgAlbumArt = findViewById(R.id.img_album_art);
+        btnQueue = findViewById(R.id.queue_button);
+        visualizerView = findViewById(R.id.visualizer);
+
 
         sessionManager = new SessionManager(this);
 
@@ -131,6 +147,7 @@ public class PlayerActivity extends AppCompatActivity {
 
         // Lấy userId từ SessionManager
         String userIdString = sessionManager.getUserId();
+        Log.d(TAG, "User ID: " + sessionManager.getUserId());
         if (userIdString == null || userIdString.isEmpty()) {
             Toast.makeText(this, "User not logged in", Toast.LENGTH_SHORT).show();
             finish();
