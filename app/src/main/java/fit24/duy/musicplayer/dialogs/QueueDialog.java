@@ -1,6 +1,8 @@
 package fit24.duy.musicplayer.dialogs;
 
+import android.content.Context;
 import android.os.Bundle;
+import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -96,6 +98,8 @@ public class QueueDialog extends DialogFragment {
         @NonNull
         @Override
         public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            // Tạo ContextThemeWrapper với theme PopupMenuDark
+            Context context = new ContextThemeWrapper(parent.getContext(), R.style.PopupMenuDark);
             View view = LayoutInflater.from(parent.getContext())
                     .inflate(R.layout.item_queue, parent, false);
             return new ViewHolder(view);
@@ -111,7 +115,7 @@ public class QueueDialog extends DialogFragment {
             holder.itemView.setAlpha(position == currentIndex ? 1.0f : 0.7f);
             holder.cardView.setCardBackgroundColor(position == currentIndex ?
                     getContext().getColor(R.color.purple_500) :
-                    getContext().getColor(R.color.white));
+                    getContext().getColor(R.color.black));
 
             holder.itemView.setOnClickListener(v -> {
                 if (listener != null) {

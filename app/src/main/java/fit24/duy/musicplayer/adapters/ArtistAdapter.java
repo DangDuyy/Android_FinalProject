@@ -1,6 +1,7 @@
 package fit24.duy.musicplayer.adapters;
 
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,16 +18,30 @@ import com.bumptech.glide.Glide;
 import java.util.List;
 
 import fit24.duy.musicplayer.R;
+import fit24.duy.musicplayer.activities.PlayerActivity;
+import fit24.duy.musicplayer.activities.LoginActivity;
 import fit24.duy.musicplayer.models.Song;
 import fit24.duy.musicplayer.utils.UrlUtils;
+import fit24.duy.musicplayer.utils.SessionManager;
 
 public class ArtistAdapter extends RecyclerView.Adapter<ArtistAdapter.SongViewHolder> {
     private Context context;
     private List<Song> songList;
+    private OnItemClickListener listener;
+    private SessionManager sessionManager;
+
+    public interface OnItemClickListener {
+        void onItemClick(Song song);
+    }
+
+    public void setOnItemClickListener(OnItemClickListener listener) {
+        this.listener = listener;
+    }
 
     public ArtistAdapter(Context context, List<Song> songs) {
         this.context = context;
         this.songList = songs;
+        this.sessionManager = new SessionManager(context);
     }
 
     @NonNull
@@ -57,6 +72,22 @@ public class ArtistAdapter extends RecyclerView.Adapter<ArtistAdapter.SongViewHo
             songTitle = itemView.findViewById(R.id.song_title);
             songArtist = itemView.findViewById(R.id.song_artist);
             moreButton = itemView.findViewById(R.id.more_button);
+
+            itemView.setOnClickListener(v -> {
+                int position = getAdapterPosition();
+                if (position != RecyclerView.NO_POSITION) {
+                    if (sessionManager.isLoggedIn()) {
+                        Song song = songList.get(position);
+                        Intent intent = new Intent(context, PlayerActivity.class);
+                        intent.putExtra("song_id", song.getId());
+                        context.startActivity(intent);
+                    } else {
+                        Toast.makeText(context, "Vui lòng đăng nhập để nghe nhạc", Toast.LENGTH_SHORT).show();
+                        Intent intent = new Intent(context, LoginActivity.class);
+                        context.startActivity(intent);
+                    }
+                }
+            });
         }
 
         public void bind(Song song) {
@@ -65,11 +96,11 @@ public class ArtistAdapter extends RecyclerView.Adapter<ArtistAdapter.SongViewHo
 
             String imageUrl = UrlUtils.getImageUrl(song.getCoverImage());
             Glide.with(context)
-                    .load(imageUrl)
-                    .placeholder(R.drawable.album_placeholder)
-                    .error(R.drawable.album_placeholder)
-                    .centerCrop()
-                    .into(songImage);
+                .load(imageUrl)
+                .placeholder(R.drawable.album_placeholder)
+                .error(R.drawable.album_placeholder)
+                .centerCrop()
+                .into(songImage);
 
             moreButton.setOnClickListener(v -> {
                 // TODO: Thêm menu tuỳ chọn bài hát nếu cần

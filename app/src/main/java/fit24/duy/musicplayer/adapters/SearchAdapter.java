@@ -1,12 +1,14 @@
 package fit24.duy.musicplayer.adapters;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.RecyclerView;
@@ -16,10 +18,13 @@ import com.bumptech.glide.Glide;
 import java.util.List;
 
 import fit24.duy.musicplayer.R;
+import fit24.duy.musicplayer.activities.PlayerActivity;
+import fit24.duy.musicplayer.activities.LoginActivity;
 import fit24.duy.musicplayer.models.Album;
 import fit24.duy.musicplayer.models.Artist;
 import fit24.duy.musicplayer.models.Song;
 import fit24.duy.musicplayer.utils.UrlUtils;
+import fit24.duy.musicplayer.utils.SessionManager;
 
 public class SearchAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private static final int TYPE_SONG = 0;
@@ -29,6 +34,7 @@ public class SearchAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     private List<Object> results;
     private Context context;
     private OnItemClickListener onItemClickListener;
+    private SessionManager sessionManager;
 
     public interface OnItemClickListener {
         void onItemClick(Object item);
@@ -37,6 +43,7 @@ public class SearchAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     public SearchAdapter(Context context, List<Object> results) {
         this.context = context;
         this.results = results;
+        this.sessionManager = new SessionManager(context);
     }
 
     public void setOnItemClickListener(OnItemClickListener listener) {
@@ -98,7 +105,16 @@ public class SearchAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
 
             itemView.setOnClickListener(v -> {
                 if (onItemClickListener != null) {
-                    onItemClickListener.onItemClick(results.get(getAdapterPosition()));
+                    Object item = results.get(getAdapterPosition());
+                    if (item instanceof Song) {
+                        if (sessionManager.isLoggedIn()) {
+                            onItemClickListener.onItemClick(item);
+                        } else {
+                            Toast.makeText(context, "Vui lòng đăng nhập để nghe nhạc", Toast.LENGTH_SHORT).show();
+                            Intent intent = new Intent(context, LoginActivity.class);
+                            context.startActivity(intent);
+                        }
+                    }
                 }
             });
         }

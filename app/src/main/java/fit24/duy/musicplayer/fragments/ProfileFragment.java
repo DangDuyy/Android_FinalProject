@@ -1,9 +1,11 @@
 package fit24.duy.musicplayer.fragments;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -26,10 +28,18 @@ import com.bumptech.glide.load.engine.GlideException;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
 
+import java.util.List;
+
 import fit24.duy.musicplayer.R;
 import fit24.duy.musicplayer.activities.MainActivity;
+import fit24.duy.musicplayer.api.ApiClient;
+import fit24.duy.musicplayer.api.ApiService;
+import fit24.duy.musicplayer.models.Song;
 import fit24.duy.musicplayer.utils.SessionManager;
 import fit24.duy.musicplayer.utils.UrlUtils;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class ProfileFragment extends Fragment {
     private TextView usernameText;
@@ -70,6 +80,32 @@ public class ProfileFragment extends Fragment {
         // Set menu button click listener
         menuButton.setOnClickListener(v -> showPopupMenu(v));
 
+        // Gọi API để lấy số lượng bài hát đã like
+        ApiService apiService = ApiClient.getClient().create(ApiService.class);
+        String userId = sessionManager.getUserId(); // đảm bảo bạn đã lưu userId khi login
+        long userIdLong = Long.parseLong(userId);
+
+        Call<List<Song>> likedSongsCall = apiService.getLikedSongs(userIdLong);
+        likedSongsCall.enqueue(new Callback<List<Song>>() {
+            @Override
+            public void onResponse(Call<List<Song>> call, Response<List<Song>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    int songCount = response.body().size();
+                    totalSongsText.setText(String.valueOf(songCount));
+                } else {
+                    totalSongsText.setText("0");
+                    Log.e("ProfileFragment", "Không thể tải số bài hát đã thích");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<Song>> call, Throwable t) {
+                totalSongsText.setText("0");
+                Log.e("ProfileFragment", "Lỗi khi tải liked songs: " + t.getMessage());
+            }
+        });
+
+
         // Set edit profile button click listener
         editProfileButton.setOnClickListener(v -> {
             NavController navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment);
@@ -89,7 +125,10 @@ public class ProfileFragment extends Fragment {
     }
 
     private void showPopupMenu(View view) {
-        PopupMenu popup = new PopupMenu(requireContext(), view);
+        // Tạo ContextThemeWrapper với theme PopupMenuDark
+        Context context = new ContextThemeWrapper(requireContext(), R.style.PopupMenuDark);
+        // Sử dụng context đã bao bọc để tạo PopupMenu
+        PopupMenu popup = new PopupMenu(context, view); // Sửa ở đây
         popup.getMenuInflater().inflate(R.menu.profile_menu, popup.getMenu());
 
         popup.setOnMenuItemClickListener(item -> {

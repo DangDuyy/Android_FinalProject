@@ -4,5 +4,5 @@
         android:id="@+id/menu_download"
         android:title="Download"
         android:icon="@drawable/ic_download"
-        android:iconTint="#FFFFFF" /> <!-- Ensure icon is white -->
+        android:iconTint="#000000" /> <!-- Changed to black -->
 </menu>

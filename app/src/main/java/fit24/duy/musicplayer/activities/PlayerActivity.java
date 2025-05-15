@@ -303,51 +303,48 @@ public class PlayerActivity extends AppCompatActivity {
     private void updateSongInfoAndSeekBar() {
         Song song = queueManager.getCurrentSong();
         MediaPlayer mediaPlayer = queueManager.getMediaPlayer();
-        if (song != null && mediaPlayer != null) {
-            currentSongUrl = song.getAudioUrl();
 
-            tvSongTitle.setText(song.getTitle());
-            tvArtist.setText(song.getArtist() != null ? song.getArtist().getName() : "Unknown Artist");
-            String imageUrl = UrlUtils.getImageUrl(song.getCoverImage());
-            Glide.with(this)
-                    .load(imageUrl)
-                    .centerCrop()
-                    .into(imgAlbumArt);
+        if (song == null || mediaPlayer == null) {
+            seekBar.setEnabled(false);
+            return;
+        }
 
-            // Kiểm tra trạng thái MediaPlayer
-            try {
-                if (mediaPlayer.isPlaying() || mediaPlayer.getCurrentPosition() > 0) {
-                    seekBar.setMax(mediaPlayer.getDuration());
-                    tvDuration.setText(formatTime(mediaPlayer.getDuration()));
-                    seekBar.setEnabled(true); // Kích hoạt seekBar
-                    updateSeekBar();
-                } else {
-                    // Đợi MediaPlayer sẵn sàng
-                    mediaPlayer.setOnPreparedListener(mp -> {
-                        seekBar.setMax(mp.getDuration());
-                        tvDuration.setText(formatTime(mp.getDuration()));
-                        seekBar.setEnabled(true); // Kích hoạt seekBar
-                        mp.start();
-                        updateSeekBar();
-                        btnPlayPause.setImageResource(R.drawable.ic_pause);
-                    });
-                }
-            } catch (IllegalStateException e) {
-                Log.e(TAG, "MediaPlayer not prepared yet", e);
+        currentSongUrl = song.getAudioUrl();
+
+        tvSongTitle.setText(song.getTitle());
+        tvArtist.setText(song.getArtist() != null ? song.getArtist().getName() : "Unknown Artist");
+        String imageUrl = UrlUtils.getImageUrl(song.getCoverImage());
+        Glide.with(this)
+                .load(imageUrl)
+                .centerCrop()
+                .into(imgAlbumArt);
+
+        try {
+            if (mediaPlayer.isPlaying() || mediaPlayer.getCurrentPosition() > 0) {
+                // Nếu đã chơi rồi thì set trực tiếp
+                seekBar.setMax(mediaPlayer.getDuration());
+                tvDuration.setText(formatTime(mediaPlayer.getDuration()));
+                seekBar.setEnabled(true);
+                updateSeekBar();
+            } else {
+                // Nếu chưa chuẩn bị, set onPreparedListener và gọi prepareAsync
+                mediaPlayer.reset();
+                mediaPlayer.setDataSource(currentSongUrl);
                 mediaPlayer.setOnPreparedListener(mp -> {
                     seekBar.setMax(mp.getDuration());
                     tvDuration.setText(formatTime(mp.getDuration()));
-                    seekBar.setEnabled(true); // Kích hoạt seekBar
+                    seekBar.setEnabled(true);
                     mp.start();
                     updateSeekBar();
                     btnPlayPause.setImageResource(R.drawable.ic_pause);
                 });
+                mediaPlayer.prepareAsync();  // Chuẩn bị không đồng bộ
             }
-            btnPlayPause.setImageResource(mediaPlayer.isPlaying() ? R.drawable.ic_pause : R.drawable.ic_play);
-        } else {
-            seekBar.setEnabled(false); // Vô hiệu hóa seekBar nếu không có bài hát
+        } catch (Exception e) {
+            Log.e(TAG, "Error preparing MediaPlayer", e);
         }
     }
+
 
     private void updateSeekBar() {
         if (updateSeekBarRunnable != null) {
