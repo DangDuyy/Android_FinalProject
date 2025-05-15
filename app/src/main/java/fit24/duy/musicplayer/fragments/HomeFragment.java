@@ -12,6 +12,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -49,42 +50,27 @@ public class HomeFragment extends Fragment {
         Log.d(TAG, "onCreateView: Initializing HomeFragment");
 
         // Initialize views
-        recentlyPlayedRecyclerView = view.findViewById(R.id.recently_played_recycler_view);
         recommendedRecyclerView = view.findViewById(R.id.recommended_recycler_view);
-        recentlyPlayedProgress = view.findViewById(R.id.recently_played_progress);
         recommendedProgress = view.findViewById(R.id.recommended_progress);
-        recentlyPlayedEmpty = view.findViewById(R.id.recently_played_empty);
         recommendedEmpty = view.findViewById(R.id.recommended_empty);
 
-        // Set up layouts
-        LinearLayoutManager recentlyPlayedLayoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
-        recentlyPlayedRecyclerView.setLayoutManager(recentlyPlayedLayoutManager);
-        LinearLayoutManager recommendedLayoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
-        recommendedRecyclerView.setLayoutManager(recommendedLayoutManager);
+        // Set up layout with GridLayoutManager
+        GridLayoutManager gridLayoutManager = new GridLayoutManager(getContext(), 2); // 2 items per row
+        recommendedRecyclerView.setLayoutManager(gridLayoutManager);
 
-        // Initialize adapters with empty lists
-        recentlyPlayedAdapter = new MusicAdapter(new ArrayList<>());
+        // Initialize adapter with empty list
         recommendedAdapter = new MusicAdapter(new ArrayList<>());
-
-        // Set click listeners for adapters
-        recentlyPlayedAdapter.setOnItemClickListener(this::onSongSelected);
         recommendedAdapter.setOnItemClickListener(this::onSongSelected);
-
-        // Set adapters
-        recentlyPlayedRecyclerView.setAdapter(recentlyPlayedAdapter);
         recommendedRecyclerView.setAdapter(recommendedAdapter);
 
         // Initialize API service
         apiService = ApiClient.getClient().create(ApiService.class);
 
-        // Show loading indicators
-        recentlyPlayedProgress.setVisibility(View.VISIBLE);
+        // Show loading indicator
         recommendedProgress.setVisibility(View.VISIBLE);
-        recentlyPlayedEmpty.setVisibility(View.GONE);
         recommendedEmpty.setVisibility(View.GONE);
 
-        // Fetch data
-        fetchRecentlyPlayedSongs();
+        // Fetch recommended songs
         fetchRecommendedSongs();
 
         return view;
