@@ -258,9 +258,10 @@ public class PlayerActivity extends AppCompatActivity {
             if (item.getItemId() == R.id.menu_download) {
                 Log.d("DEBUG", "User status = " + sessionManager.getUserStatus());
                 if (sessionManager.getUserStatus() == 1) {
-                    if (mediaPlayer != null && currentSongUrl != null) {
+                    if (currentSongUrl != null && !currentSongUrl.isEmpty()) {
                         downloadSong(currentSongUrl, tvSongTitle.getText().toString());
                     } else {
+                        Log.e(TAG, "Download failed: Song URL is null or empty.");
                         Toast.makeText(this, "No song selected", Toast.LENGTH_SHORT).show();
                     }
                 } else {
@@ -303,6 +304,8 @@ public class PlayerActivity extends AppCompatActivity {
         Song song = queueManager.getCurrentSong();
         MediaPlayer mediaPlayer = queueManager.getMediaPlayer();
         if (song != null && mediaPlayer != null) {
+            currentSongUrl = song.getAudioUrl();
+
             tvSongTitle.setText(song.getTitle());
             tvArtist.setText(song.getArtist() != null ? song.getArtist().getName() : "Unknown Artist");
             String imageUrl = UrlUtils.getImageUrl(song.getCoverImage());
